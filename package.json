@@ -1,9 +1,13 @@
 {
   "name": "@drill4j/state-watcher-ui",
   "version": "0.1.0",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "webpack serve --port 8090",
     "start:standalone": "webpack serve --env standalone",
+    "tailwind:css": "tailwind build src/tailwind.css -c tailwind.config.js -o src/index.css --minify",
     "build": "webpack --mode=production",
     "analyze": "webpack --mode=production --env analyze",
     "lint": "eslint src --ext js,ts,tsx",
@@ -63,6 +67,7 @@
   },
   "dependencies": {
     "@babel/plugin-transform-react-jsx": "^7.14.5",
+    "@drill4j/common-hooks": "^1.0.5",
     "@drill4j/send-notification-event": "^1.0.0",
     "@drill4j/socket": "^0.1.13",
     "@drill4j/ui-kit": "^0.1.111",
