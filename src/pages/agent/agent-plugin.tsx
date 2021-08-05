@@ -29,7 +29,7 @@ export const AgentPlugin = () => {
   const { agentId = "", buildVersion = "" } = useParams<{ agentId: string; buildVersion: string; }>();
   const { buildVersion: activeBuildVersion = "", instanceIds = [] } = useAgent(agentId) || {};
 
-  const [timeStamp, setTimeStamp] = useState(60000);
+  const [timeStamp, setTimeStamp] = useState(3600000);
 
   const {
     data, setData, isLoading, setIsLoading,

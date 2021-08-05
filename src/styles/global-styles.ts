@@ -29,5 +29,9 @@ export const GlobalStyle = createGlobalStyle`
         }
       }
     }
+
+    path[class="recharts-rectangle recharts-reference-area-rect"]:hover + .pause-tooltip {
+      ${tw`visible`}
+    }
   }
 `;

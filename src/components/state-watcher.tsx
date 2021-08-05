@@ -118,7 +118,7 @@ export const StateWatcher = ({
                 x1={from}
                 x2={to}
                 fill="#E3E6E8"
-                label={PauseIcon}
+                label={PauseTooltip}
               />
             ))}
             <Tooltip
@@ -211,32 +211,24 @@ const Tick = ({
   </g>
 );
 
-const PauseIcon = ({ viewBox }: any) => (
-  <g className="group">
-    <rect x={viewBox.x - 96} y="-54" width="188" height="28" fill="#1B191B" rx="4" ry="4" tw="invisible group-hover:visible" />
-    <text x={viewBox.x - 80} y="-36" fill="#fff" tw="text-12 leading-16 invisible group-hover:visible">
-      The Monitoring was paused
-    </text>
-    <svg
-      tw="text-monochrome-black h-2 w-full left-0 invisible group-hover:visible"
-      x={viewBox.x - 13}
-      y="-30px"
-    >
-      <polygon tw="fill-current" points="0,0 13,13 26,0" />
-    </svg>
-    <g
-      transform="translate(-3 -2)"
-      stroke="#687481"
-      strokeWidth="1"
-      fill="none"
-      fillRule="evenodd"
-    >
-      <rect x={viewBox.x - 2} y="-10" width="3" height="11" rx=".5" />
-      <rect x={viewBox.x} y="-10" width="20" height="12" rx=".5" tw="" fill="#fff" opacity="0" />
-      <rect x={viewBox.x + 5} y="-10" width="3" height="11" rx=".5" />
+const PauseTooltip = ({ viewBox }: any) => {
+  const centeredX = viewBox.x + viewBox.width / 2;
+  return (
+    <g className="pause-tooltip invisible">
+      <rect x={centeredX - 96} y="-34" width="188" height="28" fill="#1B191B" rx="4" ry="4" />
+      <text x={centeredX - 76} y="-16" fill="#fff" tw="text-12 leading-16">
+        The Monitoring was paused
+      </text>
+      <svg
+        tw="text-monochrome-black h-2 w-full left-0"
+        x={centeredX - 14}
+        y="-10px"
+      >
+        <polygon tw="fill-current" points="0,0 13,13 26,0" />
+      </svg>
     </g>
-  </g>
-);
+  );
+};
 
 const Label = styled.span`
   ${tw`text-12 leading-16 text-monochrome-default text-ellipsis`}
