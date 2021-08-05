@@ -35,6 +35,7 @@ export const GroupPlugin = () => {
       }) => (
         group && (
           <AgentStateWatcherLineChart
+            key={id}
             id={id}
             buildVersion={buildVersion}
             instanceIds={instanceIds}
