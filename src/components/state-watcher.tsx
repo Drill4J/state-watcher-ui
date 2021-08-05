@@ -105,6 +105,9 @@ export const StateWatcher = ({
               />
             ))}
             <Tooltip
+              cursor={data.series.some(({ data: seriesData }) =>
+                seriesData.some(({ timeStamp }) =>
+                  data.xTicks.slice(-data.xTicks).includes(timeStamp)))}
               content={({ payload, label }) => <StateWatcherTooltip payload={payload} label={label} maxHeap={data?.maxHeap} />}
             />
             {data.series.map((instance) => (
