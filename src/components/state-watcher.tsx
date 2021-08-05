@@ -122,10 +122,17 @@ export const StateWatcher = ({
               />
             ))}
             <Tooltip
+              trigger="click"
               cursor={data.series.some(({ data: seriesData }) =>
                 seriesData.some(({ timeStamp }) =>
                   data.xTicks.slice(-data.xTicks).includes(timeStamp)))}
-              content={({ payload, label }) => <StateWatcherTooltip payload={payload} label={label} maxHeap={data?.maxHeap} />}
+              content={({ payload, label }) => (
+                <StateWatcherTooltip
+                  payload={payload}
+                  label={label}
+                  maxHeap={data?.maxHeap}
+                />
+              )}
             />
             {data.series.map((instance) => (
               observableInstances.find(({ instanceId }) => instance.instanceId === instanceId)?.isActive && (
