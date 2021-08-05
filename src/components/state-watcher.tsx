@@ -39,6 +39,7 @@ export const StateWatcher = ({
   const { observableInstances, toggleInstanceActiveStatus } = useInstanceIds(instanceIds);
   const maxYAxisTick = data.maxHeap + data.maxHeap * 0.15;
   const yAxisStep = maxYAxisTick / 4;
+  const haveData = data.series.some(({ data: seriesData }) => seriesData.length > 0);
 
   return isActiveBuildVersion ? (
     <>
@@ -57,7 +58,7 @@ export const StateWatcher = ({
               stroke="#1B191B"
               shapeRendering="crispEdges"
               domain={["dataMin", "dataMax"]}
-              ticks={data.xTicks}
+              ticks={haveData ? data.xTicks : undefined}
               interval={defineInterval(data.xTicks.length)}
               tick={({ x, y, payload }) => {
                 const date = new Date(payload.value);
@@ -86,6 +87,22 @@ export const StateWatcher = ({
               strokeWidth={0}
             />
             {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />}
+            {!haveData && (
+              <ReferenceLine
+                y={yAxisStep * 2}
+                label={({ viewBox }) => (
+                  <text
+                    y="185"
+                    textAnchor="middle"
+                    fill="#A4ACB3"
+                  >
+                    <tspan fill="#A4ACB3" x={viewBox.width / 2}>Press &quot;Start Monitoring&quot; to begin</tspan>
+                  </text>
+                )}
+                stroke="#F7D77C"
+                strokeWidth={0}
+              />
+            )}
             {/* below is a hack to match the design */}
             {totalHeapLineIsVisible && (
               <ReferenceLine
@@ -118,7 +135,8 @@ export const StateWatcher = ({
                   type="linear"
                   dataKey="memory.heap"
                   stroke={observableInstances.find(({ instanceId }) => instance.instanceId === instanceId)?.color}
-                  dot={false}
+                  // dot={false}
+                  activeDot={{ r: 5 }}
                   isAnimationActive={false}
                   strokeWidth={2}
                   name={instance.instanceId}

@@ -36,7 +36,7 @@ export const AgentPlugin = () => {
   } = useStateWatcher(agentId, buildVersion, timeStamp);
 
   const isActiveBuildVersion = buildVersion === activeBuildVersion;
-
+  const haveData = data.series.some(({ data: seriesData }) => seriesData.length > 0);
   return (
     <>
       <GlobalStyle />
@@ -45,7 +45,7 @@ export const AgentPlugin = () => {
           items={(
             <div tw="flex gap-x-6 items-center">
               <div tw="flex gap-x-4 items-center">
-                <MonitoringTimeDropdown timeStamp={timeStamp} setTimeStamp={setTimeStamp} />
+                <MonitoringTimeDropdown timeStamp={timeStamp} setTimeStamp={setTimeStamp} disable={!haveData} />
                 <div tw="h-12 border-r border-monochrome-medium-tint" />
                 <MonitoringIndicator active={data.isMonitoring} />
               </div>

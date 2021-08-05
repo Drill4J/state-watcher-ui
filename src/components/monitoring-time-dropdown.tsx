@@ -15,15 +15,16 @@
  */
 import React, { Dispatch, SetStateAction } from "react";
 import { Dropdown } from "@drill4j/ui-kit";
-import "twin.macro";
+import tw, { styled } from "twin.macro";
 
 interface Props {
   timeStamp: number;
-  setTimeStamp: Dispatch<SetStateAction<number>>
+  setTimeStamp: Dispatch<SetStateAction<number>>;
+  disable?: boolean;
 }
 
-export const MonitoringTimeDropdown = ({ timeStamp, setTimeStamp }: Props) => (
-  <div tw="leading-20 text-14 font-bold">
+export const MonitoringTimeDropdown = ({ timeStamp, setTimeStamp, disable }: Props) => (
+  <StyledDropdown disable={disable}>
     <Dropdown
       items={[
         {
@@ -63,5 +64,10 @@ export const MonitoringTimeDropdown = ({ timeStamp, setTimeStamp }: Props) => (
       onChange={(value) => setTimeStamp(Number(value))}
       value={timeStamp}
     />
-  </div>
+  </StyledDropdown>
 );
+
+const StyledDropdown = styled.div`
+  ${tw`leading-20 text-14 font-bold`};
+  ${({ disable }: { disable?: boolean }) => disable && tw`opacity-20 pointer-events-none`}
+`;
