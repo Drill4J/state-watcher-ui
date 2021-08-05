@@ -41,7 +41,7 @@ export const MonitoringButton = ({
     onClick={async () => {
       try {
         setIsLoading(true);
-        const response = await axios.post(`/agents/${agentId}/plugins/state-watcher/dispatch-action`, {
+        const response = await axios.post(`/agents/${agentId}/plugins/stateWatcher/dispatch-action`, {
           type: `${data.isMonitoring ? "STOP" : "START"}_RECORD`,
         });
         setData((prevState) => (

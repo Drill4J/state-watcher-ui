@@ -83,7 +83,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
       try {
         setIsLoading(true);
         const response = await axios.post(
-          `/agents/${agentId}/plugins/state-watcher/dispatch-action`,
+          `/agents/${agentId}/plugins/stateWatcher/dispatch-action`,
           {
             type: "RECORD_DATA",
             payload: { from: currentDate - windowMs, to: currentDate },

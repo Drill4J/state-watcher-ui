@@ -52,7 +52,7 @@ const AgentPluginLifecycle = singleSpaReact({
   ReactDOM,
   rootComponent: () => <BrowserRouter><Route path={agentPluginPath} component={AgentPluginPage} /></BrowserRouter>,
   errorBoundary: ErrorBoundary,
-  domElementGetter: () => document.getElementById("state-watcher") || document.body,
+  domElementGetter: () => document.getElementById("stateWatcher") || document.body,
 });
 
 export const AgentPlugin = {
@@ -106,7 +106,7 @@ export const GroupPluginLifecycle = singleSpaReact({
   React,
   ReactDOM,
   rootComponent: () => <BrowserRouter><Route path={groupPluginPath} component={GroupPluginPage} /></BrowserRouter>,
-  domElementGetter: () => document.getElementById("state-watcher") || document.body,
+  domElementGetter: () => document.getElementById("stateWatcher") || document.body,
   errorBoundary: ErrorBoundary,
 });
 

@@ -15,4 +15,4 @@
  */
 import { createApi } from "@drill4j/socket";
 
-export const stateWatcherPluginSocket = createApi("plugins/state-watcher");
+export const stateWatcherPluginSocket = createApi("plugins/stateWatcher");
