@@ -45,7 +45,7 @@ export const StateWatcher = ({
       <div tw="flex justify-between py-6">
         <span tw="text-12 leading-16 text-monochrome-default font-bold uppercase">Memory usage</span>
       </div>
-      <div tw="grid grid-cols-[1fr 208px] gap-x-6 pl-4">
+      <div tw="flex gap-x-6 pl-4">
         <ResponsiveContainer height={height}>
           <LineChart height={height}>
             <CartesianGrid strokeDasharray="line" strokeWidth={1} stroke="#E3E6E8" />

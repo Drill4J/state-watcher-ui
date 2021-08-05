@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import React, { Dispatch, SetStateAction } from "react";
-import { Inputs } from "@drill4j/ui-kit";
+import { Dropdown } from "@drill4j/ui-kit";
+import "twin.macro";
 
 interface Props {
   timeStamp: number;
@@ -22,43 +23,45 @@ interface Props {
 }
 
 export const MonitoringTimeDropdown = ({ timeStamp, setTimeStamp }: Props) => (
-  <Inputs.Dropdown
-    items={[
-      {
-        label: "Last minute", value: 60000,
-      },
-      {
-        label: "Last 2 minutes", value: 120000,
-      },
-      {
-        label: "Last 3 minutes", value: 180000,
-      },
-      {
-        label: "Last 4 minutes", value: 240000,
-      },
-      {
-        label: "Last 5 minutes", value: 300000,
-      },
-      {
-        label: "Last 10 minutes", value: 600000,
-      },
-      {
-        label: "Last 30 minutes", value: 1800000,
-      },
-      {
-        label: "Last 1 hour", value: 3600000,
-      },
-      {
-        label: "Last 4 hours", value: 14400000,
-      },
-      {
-        label: "Last 8 hours", value: 28800000,
-      },
-      {
-        label: "Last 12 hours", value: 86400000,
-      },
-    ]}
-    onChange={({ value }: any) => setTimeStamp(Number(value))}
-    value={timeStamp}
-  />
+  <div tw="leading-20 text-14 font-bold">
+    <Dropdown
+      items={[
+        {
+          label: "Last minute", value: 60000,
+        },
+        {
+          label: "Last 2 minutes", value: 120000,
+        },
+        {
+          label: "Last 3 minutes", value: 180000,
+        },
+        {
+          label: "Last 4 minutes", value: 240000,
+        },
+        {
+          label: "Last 5 minutes", value: 300000,
+        },
+        {
+          label: "Last 10 minutes", value: 600000,
+        },
+        {
+          label: "Last 30 minutes", value: 1800000,
+        },
+        {
+          label: "Last 1 hour", value: 3600000,
+        },
+        {
+          label: "Last 4 hours", value: 14400000,
+        },
+        {
+          label: "Last 8 hours", value: 28800000,
+        },
+        {
+          label: "Last 12 hours", value: 86400000,
+        },
+      ]}
+      onChange={(value) => setTimeStamp(Number(value))}
+      value={timeStamp}
+    />
+  </div>
 );
