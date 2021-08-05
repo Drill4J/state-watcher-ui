@@ -125,23 +125,20 @@ export const StateWatcher = ({
           </LineChart>
         </ResponsiveContainer>
         <div tw="space-y-1 pt-1 w-52">
-          <Checkbox
-            color="#F7D77C"
-            checked={totalHeapLineIsVisible}
-            onChange={() => setTotalHeapLineIsVisible(!totalHeapLineIsVisible)}
-            label={<Label>Total {formatBytes(data.maxHeap)}</Label>}
-          />
+          <label tw="flex gap-x-2" style={{ color: "#F7D77C" }}>
+            <Checkbox
+              checked={totalHeapLineIsVisible}
+              onChange={() => setTotalHeapLineIsVisible(!totalHeapLineIsVisible)}
+            />
+            <Label>Total {formatBytes(data.maxHeap)}</Label>
+          </label>
           <span tw="text-10 leading-24 text-monochrome-default">Instances:</span>
           <ScrollContainer>
             {observableInstances.map(({ instanceId, color, isActive }) => (
-              <div tw="flex gap-x-2">
-                <Checkbox
-                  color={color}
-                  checked={isActive}
-                  onChange={() => toggleInstanceActiveStatus(instanceId)}
-                />
+              <label tw="flex gap-x-2" style={{ color }} key={instanceId}>
+                <Checkbox onChange={() => toggleInstanceActiveStatus(instanceId)} checked={isActive} />
                 <Label title={instanceId}>{instanceId}</Label>
-              </div>
+              </label>
             ))}
           </ScrollContainer>
         </div>

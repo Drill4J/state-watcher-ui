@@ -19,6 +19,7 @@ import axios from "axios";
 
 import { stateWatcherPluginSocket } from "common";
 import { StateWatcherData } from "types/state-watcher";
+import { useInterval } from "./use-interval";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
   const currentDate = Date.now();
@@ -104,17 +105,14 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     })();
   }, [windowMs]);
 
-  useEffect(() => {
-    setInterval(() => setData((prevState) =>
+  useInterval(
+    () => setData((prevState) =>
       ({
         ...prevState,
         xTicks: [...prevState.xTicks, prevState.xTicks[prevState.xTicks.length - 1] + refreshRate].slice(1),
-      })), refreshRate);
-
-    // return () => {
-    //   clearInterval(interval);
-    // };
-  }, []);
+      })),
+    refreshRate,
+  );
 
   return {
     data,
