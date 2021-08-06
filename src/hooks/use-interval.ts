@@ -17,7 +17,7 @@ import { useEffect, useRef } from "react";
 
 type Callback = (...args: any[]) => void;
 
-export const useInterval = (callback: Callback, delay?: number | null) => {
+export const useInterval = (callback: Callback, delay: number) => {
   const savedCallback = useRef<Callback>(() => {});
 
   useEffect(() => {
@@ -25,11 +25,7 @@ export const useInterval = (callback: Callback, delay?: number | null) => {
   });
 
   useEffect(() => {
-    if (delay !== null) {
-      const interval = setInterval(() => savedCallback.current(), delay || 0);
-      return () => clearInterval(interval);
-    }
-
-    return undefined;
+    const interval = setInterval(() => savedCallback.current(), delay);
+    return () => clearInterval(interval);
   }, [delay]);
 };
