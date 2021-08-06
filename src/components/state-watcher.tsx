@@ -37,8 +37,10 @@ export const StateWatcher = ({
 }: Props) => {
   const [totalHeapLineIsVisible, setTotalHeapLineIsVisible] = useState(true);
   const { observableInstances, toggleInstanceActiveStatus } = useInstanceIds(instanceIds);
-  const maxYAxisTick = data.maxHeap + data.maxHeap * 0.15;
-  const yAxisStep = maxYAxisTick / 4;
+  const topMarginYAxis = 0.15;
+  const maxYAxisTick = data.maxHeap + data.maxHeap * topMarginYAxis;
+  const divisionsCount = 4;
+  const yAxisStep = maxYAxisTick / divisionsCount;
   const haveData = data.series.some(({ data: seriesData }) => seriesData.length > 0);
 
   return isActiveBuildVersion ? (
@@ -70,12 +72,12 @@ export const StateWatcher = ({
               }}
             />
             <YAxis
-              domain={[0, data.maxHeap + data.maxHeap * 0.15]}
+              domain={[0, maxYAxisTick]}
               ticks={[0, yAxisStep, yAxisStep * 2, yAxisStep * 3, maxYAxisTick]}
               dataKey="memory.heap"
               tick={({ x, y, payload }) => (
                 <Tick
-                  isLast={payload.value === data.maxHeap + data.maxHeap * 0.15}
+                  isLast={payload.value === maxYAxisTick}
                   x={x}
                   y={y}
                   dy={5}
@@ -86,7 +88,6 @@ export const StateWatcher = ({
               )}
               strokeWidth={0}
             />
-            {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />}
             {!haveData && (
               <ReferenceLine
                 y={yAxisStep * 2}
@@ -103,6 +104,7 @@ export const StateWatcher = ({
                 strokeWidth={0}
               />
             )}
+            {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />}
             {/* below is a hack to match the design */}
             {totalHeapLineIsVisible && (
               <ReferenceLine
@@ -235,6 +237,7 @@ const Label = styled.span`
 `;
 
 function defineInterval(dataLength: number) {
-  if (dataLength < 24) return 0;
-  return Math.ceil(dataLength / 24);
+  const desiredLabelCount = 24;
+  if (dataLength < desiredLabelCount) return 0;
+  return Math.ceil(dataLength / desiredLabelCount);
 }
