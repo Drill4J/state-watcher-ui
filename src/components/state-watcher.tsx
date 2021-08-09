@@ -16,7 +16,7 @@
 import React, { useState } from "react";
 import { Checkbox, Icons, Stub } from "@drill4j/ui-kit";
 import {
-  CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart, ReferenceLine, ReferenceArea,
+  CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart, ReferenceLine, ReferenceArea, AreaChart,
 } from "recharts";
 import tw, { styled } from "twin.macro";
 
@@ -41,7 +41,6 @@ export const StateWatcher = ({
   const maxYAxisTick = data.maxHeap + data.maxHeap * topMarginYAxis;
   const divisionsCount = 4;
   const yAxisStep = maxYAxisTick / divisionsCount;
-  const haveData = data.series.some(({ data: seriesData }) => seriesData.length > 0);
 
   return isActiveBuildVersion ? (
     <>
@@ -60,7 +59,7 @@ export const StateWatcher = ({
               stroke="#1B191B"
               shapeRendering="crispEdges"
               domain={["dataMin", "dataMax"]}
-              ticks={haveData ? data.xTicks : undefined}
+              ticks={data.hasRecord || data.isMonitoring ? data.xTicks : undefined}
               interval={defineInterval(data.xTicks.length)}
               tick={({ x, y, payload }) => {
                 const date = new Date(payload.value);
@@ -88,7 +87,7 @@ export const StateWatcher = ({
               )}
               strokeWidth={0}
             />
-            {!haveData && (
+            {!data.hasRecord && !data.isMonitoring && (
               <ReferenceLine
                 y={yAxisStep * 2}
                 label={({ viewBox }) => (
@@ -121,6 +120,7 @@ export const StateWatcher = ({
                 x2={to}
                 fill="#E3E6E8"
                 label={PauseTooltip}
+                strokeOpacity={1}
               />
             ))}
             <Tooltip
@@ -144,7 +144,7 @@ export const StateWatcher = ({
                   type="linear"
                   dataKey="memory.heap"
                   stroke={observableInstances.find(({ instanceId }) => instance.instanceId === instanceId)?.color}
-                  // dot={false}
+                  dot={false}
                   activeDot={{ r: 5 }}
                   isAnimationActive={false}
                   strokeWidth={2}
