@@ -15,15 +15,20 @@
 */
 export type InstancesInfo = Array<{ instanceId: string; isActive: boolean; color: string }>;
 
+export type MemoryMetrics = { timeStamp: number; memory: { heap: number | null } };
+
 export type Series = Array<{
   instanceId: string;
-  data: Array<{ timeStamp: number; memory: { heap: number | null } }>;
+  data: MemoryMetrics[];
 }>;
+
+export type Breaks = Array<{ from: number, to: number }>;
 
 export interface StateWatcherData {
   isMonitoring: boolean;
   maxHeap: number;
-  breaks: Array<{ from: number, to: number }>;
+  breaks: Breaks;
   series: Series;
   xTicks: number[];
+  hasRecord: boolean;
 }
