@@ -19,8 +19,8 @@ import singleSpaReact from "single-spa-react";
 import axios from "axios";
 import { BrowserRouter, Route } from "react-router-dom";
 
-import { AgentPlugin as AgentPluginPage } from "./pages";
-import { agentPluginPath } from "./common";
+import { AgentPlugin as AgentPluginPage, GroupPlugin as GroupPluginPage } from "./pages";
+import { agentPluginPath, groupPluginPath } from "./common";
 
 axios.defaults.baseURL = process.env.REACT_APP_API_HOST
   ? `http://${process.env.REACT_APP_API_HOST}/api`
@@ -52,7 +52,7 @@ const AgentPluginLifecycle = singleSpaReact({
   ReactDOM,
   rootComponent: () => <BrowserRouter><Route path={agentPluginPath} component={AgentPluginPage} /></BrowserRouter>,
   errorBoundary: ErrorBoundary,
-  domElementGetter: () => document.getElementById("state-watcher") || document.body,
+  domElementGetter: () => document.getElementById("stateWatcher") || document.body,
 });
 
 export const AgentPlugin = {
@@ -82,4 +82,41 @@ export const AgentHUD = {
   ],
   update: AgentHUDLifecycle.update,
   bootstrap: AgentHUDLifecycle.bootstrap,
+};
+
+const GroupHUDLifecycle = singleSpaReact({
+  React,
+  ReactDOM,
+  rootComponent: () => <div>State watcher HUD</div>,
+  errorBoundary: ErrorBoundary,
+});
+
+export const GroupHUD = {
+  mount: [
+    GroupHUDLifecycle.mount,
+  ],
+  unmount: [
+    GroupHUDLifecycle.unmount,
+  ],
+  update: GroupHUDLifecycle.update,
+  bootstrap: GroupHUDLifecycle.bootstrap,
+};
+
+export const GroupPluginLifecycle = singleSpaReact({
+  React,
+  ReactDOM,
+  rootComponent: () => <BrowserRouter><Route path={groupPluginPath} component={GroupPluginPage} /></BrowserRouter>,
+  domElementGetter: () => document.getElementById("stateWatcher") || document.body,
+  errorBoundary: ErrorBoundary,
+});
+
+export const GroupPlugin = {
+  mount: [
+    GroupPluginLifecycle.mount,
+  ],
+  unmount: [
+    GroupPluginLifecycle.unmount,
+  ],
+  update: GroupPluginLifecycle.update,
+  bootstrap: GroupPluginLifecycle.bootstrap,
 };

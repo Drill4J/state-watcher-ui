@@ -14,3 +14,4 @@
 * limitations under the License.
 */
 export { AgentPlugin } from "./agent";
+export { GroupPlugin } from "./group";

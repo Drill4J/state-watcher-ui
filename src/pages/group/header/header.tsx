@@ -13,9 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { useAgentRouteParams } from "./use-agent-route-params";
-export { useAdminConnection } from "./use-admin-connection";
-export { useAgent } from "./use-agent";
-export { useInstanceIds } from "./use-instance-ids";
-export { useStateWatcher } from "./use-state-watcher";
-export { useInterval } from "./use-interval";
+import React from "react";
+import "twin.macro";
+
+export const Header = () => (
+  <div tw="flex justify-between items-center h-20 border-b border-monochrome-medium-tint">
+    <span tw="text-24 leading-32 font-light text-monochrome-black">
+      State Watcher
+    </span>
+  </div>
+);

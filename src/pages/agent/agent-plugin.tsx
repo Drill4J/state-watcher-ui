@@ -15,30 +15,15 @@
  */
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { createGlobalStyle } from "styled-components";
-import tw from "twin.macro";
+import "twin.macro";
 
 import {
   StateWatcher, MonitoringButton, MonitoringIndicator, MonitoringTimeDropdown,
 } from "components";
 import { useAgent, useStateWatcher } from "hooks";
+import { GlobalStyle } from "../../styles/global-styles";
 import { Header } from "./header";
-
-const GlobalStyle = createGlobalStyle`
-  svg[class="recharts-surface"] {
-    ${tw`overflow-visible`};
-
-    g[class="recharts-layer recharts-cartesian-axis recharts-xAxis xAxis"] {
-      g {
-        g {
-          line {
-            ${tw`invisible`}
-          }
-        }
-      }
-    }
-  }
-`;
+import "../../index.css";
 
 export const AgentPlugin = () => {
   const { agentId = "", buildVersion = "" } = useParams<{ agentId: string; buildVersion: string; }>();
@@ -55,12 +40,12 @@ export const AgentPlugin = () => {
   return (
     <>
       <GlobalStyle />
-      <div tw="w-full h-full px-6">
+      <div tw="w-full h-full">
         <Header
           items={(
             <div tw="flex gap-x-6 items-center">
               <div tw="flex gap-x-4 items-center">
-                <MonitoringTimeDropdown timeStamp={timeStamp} setTimeStamp={setTimeStamp} />
+                <MonitoringTimeDropdown timeStamp={timeStamp} setTimeStamp={setTimeStamp} disable={!data.hasRecord && !data.isMonitoring} />
                 <div tw="h-12 border-r border-monochrome-medium-tint" />
                 <MonitoringIndicator active={data.isMonitoring} />
               </div>

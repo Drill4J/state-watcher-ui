@@ -16,7 +16,7 @@
 import React, { useState } from "react";
 import { Checkbox, Icons, Stub } from "@drill4j/ui-kit";
 import {
-  CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart, ReferenceLine, ReferenceArea,
+  CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart, ReferenceLine, ReferenceArea, AreaChart,
 } from "recharts";
 import tw, { styled } from "twin.macro";
 
@@ -37,15 +37,17 @@ export const StateWatcher = ({
 }: Props) => {
   const [totalHeapLineIsVisible, setTotalHeapLineIsVisible] = useState(true);
   const { observableInstances, toggleInstanceActiveStatus } = useInstanceIds(instanceIds);
-  const maxYAxisTick = data.maxHeap + data.maxHeap * 0.15;
-  const yAxisStep = maxYAxisTick / 4;
+  const topMarginYAxis = 0.15;
+  const maxYAxisTick = data.maxHeap + data.maxHeap * topMarginYAxis;
+  const divisionsCount = 4;
+  const yAxisStep = maxYAxisTick / divisionsCount;
 
   return isActiveBuildVersion ? (
     <>
       <div tw="flex justify-between py-6">
         <span tw="text-12 leading-16 text-monochrome-default font-bold uppercase">Memory usage</span>
       </div>
-      <div tw="grid grid-cols-[1fr 208px] gap-x-6 pl-4">
+      <div tw="flex gap-x-6 pl-4">
         <ResponsiveContainer height={height}>
           <LineChart height={height}>
             <CartesianGrid strokeDasharray="line" strokeWidth={1} stroke="#E3E6E8" />
@@ -57,8 +59,7 @@ export const StateWatcher = ({
               stroke="#1B191B"
               shapeRendering="crispEdges"
               domain={["dataMin", "dataMax"]}
-              // ticks={data?.series[0]?.data.map(d => d?.timeStamp)}
-              ticks={data.xTicks}
+              ticks={data.hasRecord || data.isMonitoring ? data.xTicks : undefined}
               interval={defineInterval(data.xTicks.length)}
               tick={({ x, y, payload }) => {
                 const date = new Date(payload.value);
@@ -70,12 +71,12 @@ export const StateWatcher = ({
               }}
             />
             <YAxis
-              domain={[0, data.maxHeap + data.maxHeap * 0.15]}
+              domain={[0, maxYAxisTick]}
               ticks={[0, yAxisStep, yAxisStep * 2, yAxisStep * 3, maxYAxisTick]}
               dataKey="memory.heap"
               tick={({ x, y, payload }) => (
                 <Tick
-                  isLast={payload.value === data.maxHeap + data.maxHeap * 0.15}
+                  isLast={payload.value === maxYAxisTick}
                   x={x}
                   y={y}
                   dy={5}
@@ -86,6 +87,22 @@ export const StateWatcher = ({
               )}
               strokeWidth={0}
             />
+            {!data.hasRecord && !data.isMonitoring && (
+              <ReferenceLine
+                y={yAxisStep * 2}
+                label={({ viewBox }) => (
+                  <text
+                    y="185"
+                    textAnchor="middle"
+                    fill="#A4ACB3"
+                  >
+                    <tspan fill="#A4ACB3" x={viewBox.width / 2}>Press &quot;Start Monitoring&quot; to begin</tspan>
+                  </text>
+                )}
+                stroke="#F7D77C"
+                strokeWidth={0}
+              />
+            )}
             {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />}
             {/* below is a hack to match the design */}
             {totalHeapLineIsVisible && (
@@ -98,14 +115,26 @@ export const StateWatcher = ({
             )}
             {data?.breaks.map(({ from, to }) => (
               <ReferenceArea
+                key={`${from}-${to}`}
                 x1={from}
                 x2={to}
                 fill="#E3E6E8"
-                label={PauseIcon}
+                label={PauseTooltip}
+                strokeOpacity={1}
               />
             ))}
             <Tooltip
-              content={({ payload, label }) => <StateWatcherTooltip payload={payload} label={label} maxHeap={data?.maxHeap} />}
+              trigger="click"
+              cursor={data.series.some(({ data: seriesData }) =>
+                seriesData.some(({ timeStamp }) =>
+                  data.xTicks.slice(-data.xTicks).includes(timeStamp)))}
+              content={({ payload, label }) => (
+                <StateWatcherTooltip
+                  payload={payload}
+                  label={label}
+                  maxHeap={data?.maxHeap}
+                />
+              )}
             />
             {data.series.map((instance) => (
               observableInstances.find(({ instanceId }) => instance.instanceId === instanceId)?.isActive && (
@@ -116,6 +145,7 @@ export const StateWatcher = ({
                   dataKey="memory.heap"
                   stroke={observableInstances.find(({ instanceId }) => instance.instanceId === instanceId)?.color}
                   dot={false}
+                  activeDot={{ r: 5 }}
                   isAnimationActive={false}
                   strokeWidth={2}
                   name={instance.instanceId}
@@ -125,23 +155,20 @@ export const StateWatcher = ({
           </LineChart>
         </ResponsiveContainer>
         <div tw="space-y-1 pt-1 w-52">
-          <Checkbox
-            color="#F7D77C"
-            checked={totalHeapLineIsVisible}
-            onChange={() => setTotalHeapLineIsVisible(!totalHeapLineIsVisible)}
-            label={<Label>Total {formatBytes(data.maxHeap)}</Label>}
-          />
+          <label tw="flex gap-x-2" style={{ color: "#F7D77C" }}>
+            <Checkbox
+              checked={totalHeapLineIsVisible}
+              onChange={() => setTotalHeapLineIsVisible(!totalHeapLineIsVisible)}
+            />
+            <Label>Total {formatBytes(data.maxHeap)}</Label>
+          </label>
           <span tw="text-10 leading-24 text-monochrome-default">Instances:</span>
           <ScrollContainer>
             {observableInstances.map(({ instanceId, color, isActive }) => (
-              <div tw="flex gap-x-2">
-                <Checkbox
-                  color={color}
-                  checked={isActive}
-                  onChange={() => toggleInstanceActiveStatus(instanceId)}
-                />
+              <label tw="flex gap-x-2" style={{ color }} key={instanceId}>
+                <Checkbox onChange={() => toggleInstanceActiveStatus(instanceId)} checked={isActive} />
                 <Label title={instanceId}>{instanceId}</Label>
-              </div>
+              </label>
             ))}
           </ScrollContainer>
         </div>
@@ -186,38 +213,31 @@ const Tick = ({
   </g>
 );
 
-const PauseIcon = ({ viewBox }: any) => (
-  <g className="group">
-    <rect x={viewBox.x - 96} y="-54" width="188" height="28" fill="#1B191B" rx="4" ry="4" tw="invisible group-hover:visible" />
-    <text x={viewBox.x - 80} y="-36" fill="#fff" tw="text-12 leading-16 invisible group-hover:visible">
-      The Monitoring was paused
-    </text>
-    <svg
-      tw="text-monochrome-black h-2 w-full left-0 invisible group-hover:visible"
-      x={viewBox.x - 13}
-      y="-30px"
-    >
-      <polygon tw="fill-current" points="0,0 13,13 26,0" />
-    </svg>
-    <g
-      transform="translate(-3 -2)"
-      stroke="#687481"
-      strokeWidth="1"
-      fill="none"
-      fillRule="evenodd"
-    >
-      <rect x={viewBox.x - 2} y="-10" width="3" height="11" rx=".5" />
-      <rect x={viewBox.x} y="-10" width="20" height="12" rx=".5" tw="" fill="#fff" opacity="0" />
-      <rect x={viewBox.x + 5} y="-10" width="3" height="11" rx=".5" />
+const PauseTooltip = ({ viewBox }: any) => {
+  const centeredX = viewBox.x + viewBox.width / 2;
+  return (
+    <g className="pause-tooltip invisible">
+      <rect x={centeredX - 96} y="-34" width="188" height="28" fill="#1B191B" rx="4" ry="4" />
+      <text x={centeredX - 76} y="-16" fill="#fff" tw="text-12 leading-16">
+        The Monitoring was paused
+      </text>
+      <svg
+        tw="text-monochrome-black h-2 w-full left-0"
+        x={centeredX - 14}
+        y="-10px"
+      >
+        <polygon tw="fill-current" points="0,0 13,13 26,0" />
+      </svg>
     </g>
-  </g>
-);
+  );
+};
 
 const Label = styled.span`
   ${tw`text-12 leading-16 text-monochrome-default text-ellipsis`}
 `;
 
 function defineInterval(dataLength: number) {
-  if (dataLength < 24) return 0;
-  return Math.ceil(dataLength / 24);
+  const desiredLabelCount = 24;
+  if (dataLength < desiredLabelCount) return 0;
+  return Math.ceil(dataLength / desiredLabelCount);
 }
