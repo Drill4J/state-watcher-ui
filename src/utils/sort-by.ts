@@ -13,7 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { formatBytes } from "./format-bytes";
-export { lessThanTen } from "./less-than-ten";
-export { sortBy } from "./sort-by";
-export { fillGaps } from "./fill-gaps";
+
+export function sortBy<T>(arr: T[], key: keyof T) {
+  const compare = (a: T, b: T) => {
+    if (a[key] < b[key]) {
+      return -1;
+    }
+    if (a[key] > b[key]) {
+      return 1;
+    }
+
+    return 0;
+  };
+  return [...arr].sort(compare);
+}

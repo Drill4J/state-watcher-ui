@@ -116,7 +116,7 @@ export const StateWatcher = ({
             {data?.breaks.map(({ from, to }) => (
               <ReferenceArea
                 key={`${from}-${to}`}
-                x1={from}
+                x1={from < data.xTicks[0] ? data.xTicks[0] : from}
                 x2={to}
                 fill="#E3E6E8"
                 label={PauseTooltip}

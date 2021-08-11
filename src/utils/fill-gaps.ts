@@ -13,7 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { formatBytes } from "./format-bytes";
-export { lessThanTen } from "./less-than-ten";
-export { sortBy } from "./sort-by";
-export { fillGaps } from "./fill-gaps";
+
+import { MemoryMetrics } from "types/state-watcher";
+import { REFRESH_RATE } from "../constants";
+
+export function fillGaps(from: number, to: number): MemoryMetrics[] {
+  const length = Math.round((to - from) / REFRESH_RATE);
+
+  const createEmptyPoints = (_: any, k: number) => {
+    const step = REFRESH_RATE * k;
+
+    if (k === 0) return { timeStamp: from, memory: { heap: 0 } };
+    if (k === length - 1) return { timeStamp: to, memory: { heap: 0 } };
+
+    return { timeStamp: from + step, memory: { heap: null } };
+  };
+  return Array.from({ length }, createEmptyPoints);
+}

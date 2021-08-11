@@ -13,7 +13,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { formatBytes } from "./format-bytes";
-export { lessThanTen } from "./less-than-ten";
-export { sortBy } from "./sort-by";
-export { fillGaps } from "./fill-gaps";
+
+export const REFRESH_RATE = 5000;

@@ -18,15 +18,15 @@ import { sendNotificationEvent } from "@drill4j/send-notification-event";
 import axios from "axios";
 
 import { stateWatcherPluginSocket } from "common";
-import {
-  Breaks, MemoryMetrics, Series, StateWatcherData,
-} from "types/state-watcher";
+import { Series, StateWatcherData } from "types/state-watcher";
+import { fillGaps, sortBy } from "utils";
 import { useInterval } from "./use-interval";
+import { REFRESH_RATE } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
   const currentDate = Date.now();
-  const refreshRate = 5000;
-  const pointsCount = windowMs / refreshRate;
+  const pointsCount = windowMs / REFRESH_RATE;
+  const start = currentDate - windowMs;
 
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<StateWatcherData>({
@@ -49,6 +49,23 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
       }
     }
 
+    function addNewSeries(prevSeries: Series, newSeries: Series) {
+      if (prevSeries.length === 0) return newSeries;
+      return prevSeries.map(({ instanceId, data: prevSeriesData }) => {
+        const concatedSeries = [
+          ...prevSeriesData,
+          ...(newSeries.find(
+            ({ instanceId: newDataInstanceId }) => newDataInstanceId === instanceId,
+          )?.data || []),
+        ];
+
+        return ({
+          instanceId,
+          data: concatedSeries.slice(prevSeriesData.length >= pointsCount ? 1 : 0),
+        });
+      });
+    }
+
     const unsubscribe = stateWatcherPluginSocket.subscribe(
       "/metrics/heap/update",
       handleDataChange,
@@ -62,70 +79,28 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [windowMs]);
 
-  function fillGaps(from: number, to: number): MemoryMetrics[] {
-    const length = Math.round((to - from) / refreshRate);
-
-    const createEmptyPoints = (_: any, k: number) => {
-      const step = refreshRate * k;
-      return { timeStamp: from + step, memory: { heap: null } };
-    };
-    return Array.from({ length }, createEmptyPoints);
-  }
-
-  const sliceStart = (seriesDataLength: number) => (seriesDataLength > pointsCount ? 1 : 0);
-
-  function addNewSeries(prevSeries: Series, newSeries: Series) {
-    if (prevSeries.length === 0) return newSeries;
-    return prevSeries.map(({ instanceId, data: prevSeriesData }) => {
-      const concatedSeries = [
-        ...prevSeriesData,
-        ...(newSeries.find(
-          ({ instanceId: newDataInstanceId }) => newDataInstanceId === instanceId,
-        )?.data || []),
-      ];
-
-      // if (breaks.length > 0) {
-      //   const seriesData = sortBy([...concatedSeries, ...breaks.map(({ from, to }) =>
-      //     fillGaps(from, to))].flat(), "timeStamp");
-
-      //   return ({
-      //     instanceId,
-      //     data: seriesData.slice(-pointsCount),
-      //   });
-      // }
-
-      return ({
-        instanceId,
-        data: concatedSeries.slice(sliceStart(prevSeriesData.length)),
-      });
-    });
-  }
-
+  const delay = data.isMonitoring ? REFRESH_RATE : null;
   useInterval(
     () => setData((prevState) =>
       ({
         ...prevState,
-        series: prevState.series.map(({ instanceId, data: prevSeriesData }) => (
-          {
-            instanceId,
-            data: prevSeriesData.slice(sliceStart(prevSeriesData.length)),
-          })),
-        xTicks: [...prevState.xTicks, prevState.xTicks[prevState.xTicks.length - 1] + refreshRate].slice(1),
+        xTicks: [...prevState.xTicks, prevState.xTicks[prevState.xTicks.length - 1] + REFRESH_RATE].slice(1),
       })),
-    refreshRate,
+    delay,
   );
 
   useEffect(() => {
     (async () => {
       try {
         setIsLoading(true);
+
         const response = await axios.post(
           `/agents/${agentId}/plugins/stateWatcher/dispatch-action`,
           {
             type: "RECORD_DATA",
-            payload: { from: currentDate - windowMs, to: currentDate },
+            payload: { from: start, to: currentDate },
           },
         );
         const responseData: StateWatcherData = response.data.data;
@@ -136,9 +111,9 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
             ({
               instanceId,
               data: sortBy([...seriesData, ...responseData.breaks.map(({ from, to }) =>
-                fillGaps(from, to))].flat(), "timeStamp"),
+                fillGaps(from < start ? start : from, to))].flat(), "timeStamp"),
             })),
-          xTicks: Array.from({ length: pointsCount }, (_, k) => currentDate - windowMs + refreshRate * k),
+          xTicks: Array.from({ length: pointsCount }, (_, k) => start + REFRESH_RATE * k),
         });
 
         setIsLoading(false);
@@ -147,7 +122,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
         setIsLoading(false);
       }
     })();
-  }, [windowMs]);
+  }, [windowMs, data.isMonitoring]);
 
   return {
     data,
@@ -155,18 +130,4 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     isLoading,
     setIsLoading,
   };
-}
-
-function sortBy(arr: MemoryMetrics[], key: keyof MemoryMetrics) {
-  const compare = (a: MemoryMetrics, b:MemoryMetrics) => {
-    if (a[key] < b[key]) {
-      return -1;
-    }
-    if (a[key] > b[key]) {
-      return 1;
-    }
-
-    return 0;
-  };
-  return [...arr].sort(compare);
 }
