@@ -95,7 +95,6 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     (async () => {
       try {
         setIsLoading(true);
-
         const response = await axios.post(
           `/agents/${agentId}/plugins/stateWatcher/dispatch-action`,
           {
@@ -103,6 +102,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
             payload: { from: start, to: currentDate },
           },
         );
+
         const responseData: StateWatcherData = response.data.data;
 
         setData({
@@ -113,7 +113,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
               data: sortBy([...seriesData, ...responseData.breaks.map(({ from, to }) =>
                 fillGaps(from < start ? start : from, to))].flat(), "timeStamp"),
             })),
-          xTicks: Array.from({ length: pointsCount }, (_, k) => start + REFRESH_RATE * k),
+          xTicks: Array.from({ length: pointsCount }, (_, k) => Date.now() - windowMs + REFRESH_RATE * k),
         });
 
         setIsLoading(false);

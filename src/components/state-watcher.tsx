@@ -16,7 +16,7 @@
 import React, { useState } from "react";
 import { Checkbox, Icons, Stub } from "@drill4j/ui-kit";
 import {
-  CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart, ReferenceLine, ReferenceArea, AreaChart,
+  CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart, ReferenceLine, ReferenceArea,
 } from "recharts";
 import tw, { styled } from "twin.macro";
 

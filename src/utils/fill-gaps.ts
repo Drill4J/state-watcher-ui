@@ -20,6 +20,14 @@ import { REFRESH_RATE } from "../constants";
 export function fillGaps(from: number, to: number): MemoryMetrics[] {
   const length = Math.round((to - from) / REFRESH_RATE);
 
+  if (length < 3) {
+    return [
+      { timeStamp: from, memory: { heap: 0 } },
+      { timeStamp: from + (to - from) / 2, memory: { heap: null } },
+      { timeStamp: to, memory: { heap: 0 } },
+    ];
+  }
+
   const createEmptyPoints = (_: any, k: number) => {
     const step = REFRESH_RATE * k;
 
