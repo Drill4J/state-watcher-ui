@@ -22,17 +22,17 @@ export function fillGaps(from: number, to: number): MemoryMetrics[] {
 
   if (length < 3) {
     return [
-      { timeStamp: from, memory: { heap: 0 } },
+      { timeStamp: from, memory: { heap: null } },
       { timeStamp: from + (to - from) / 2, memory: { heap: null } },
-      { timeStamp: to, memory: { heap: 0 } },
+      { timeStamp: to, memory: { heap: null } },
     ];
   }
 
   const createEmptyPoints = (_: any, k: number) => {
     const step = REFRESH_RATE * k;
 
-    if (k === 0) return { timeStamp: from, memory: { heap: 0 } };
-    if (k === length - 1) return { timeStamp: to, memory: { heap: 0 } };
+    if (k === 0) return { timeStamp: from, memory: { heap: null } };
+    if (k === length - 1) return { timeStamp: to, memory: { heap: null } };
 
     return { timeStamp: from + step, memory: { heap: null } };
   };
