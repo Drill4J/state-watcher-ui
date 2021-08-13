@@ -44,7 +44,6 @@ export const StateWatcher = ({
   const divisionsCount = 4;
   const yAxisStep = maxYAxisTick / divisionsCount;
 
-  console.log(data);
   return isActiveBuildVersion ? (
     <>
       <div tw="flex justify-between py-6">
@@ -62,6 +61,7 @@ export const StateWatcher = ({
                   stroke="#1B191B"
                   shapeRendering="crispEdges"
                   domain={["dataMin", "dataMax"]}
+                  interval={defineInterval(data.series.length)}
                   tick={({ x, y, payload }) => {
                     const date = new Date(payload.value);
 
