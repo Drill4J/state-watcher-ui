@@ -25,9 +25,8 @@ import { fillGaps, sortBy } from "utils";
 import { REFRESH_RATE } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
-  const currentDate = Date.now();
+  const currentDate = roundedTimeStamp();
   const start = currentDate - windowMs;
-
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<StateWatcherLineChart>({
     isMonitoring: false,
@@ -97,7 +96,8 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
         const responseData: StateWatcherData = response.data.data;
 
         const pointsCount = Math.max(...responseData.series.map(({ data: points }) => points.length));
-        const xTicks = Array.from({ length: pointsCount }, (_, k) => Date.now() - windowMs + REFRESH_RATE * k);
+        const xTicks = Array.from({ length: pointsCount }, (_, k) => currentDate - windowMs + REFRESH_RATE * k);
+
         setData({
           ...responseData,
           series: xTicks.map((timeStamp, timeStampIndex, timeStampArray) =>
@@ -138,4 +138,11 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     isLoading,
     setIsLoading,
   };
+}
+
+function roundedTimeStamp() {
+  const now = Date.now();
+  const divisionRemainder = now % 5000;
+  const diff = 5000 - divisionRemainder;
+  return diff < divisionRemainder ? now + diff : now - divisionRemainder;
 }
