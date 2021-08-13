@@ -18,23 +18,22 @@ import { sendNotificationEvent } from "@drill4j/send-notification-event";
 import axios from "axios";
 
 import { stateWatcherPluginSocket } from "common";
-import { Series, StateWatcherData } from "types/state-watcher";
+import {
+  Series, StateWatcherData, StateWatcherLineChart, Point,
+} from "types";
 import { fillGaps, sortBy } from "utils";
-import { useInterval } from "./use-interval";
 import { REFRESH_RATE } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
   const currentDate = Date.now();
-  const pointsCount = windowMs / REFRESH_RATE;
   const start = currentDate - windowMs;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<StateWatcherData>({
+  const [data, setData] = useState<StateWatcherLineChart>({
     isMonitoring: false,
     maxHeap: 0,
     breaks: [],
     series: [],
-    xTicks: [],
     hasRecord: false,
   });
 
@@ -49,21 +48,23 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
       }
     }
 
-    function addNewSeries(prevSeries: Series, newSeries: Series) {
-      if (prevSeries.length === 0) return newSeries;
-      return prevSeries.map(({ instanceId, data: prevSeriesData }) => {
-        const concatedSeries = [
-          ...prevSeriesData,
-          ...(newSeries.find(
-            ({ instanceId: newDataInstanceId }) => newDataInstanceId === instanceId,
-          )?.data || []),
-        ];
+    function addNewSeries(prevSeries: Point[], newSeries: Series) {
+      const newPoint = newSeries.reduce((acc, point, pointIndex, points) => {
+        const prevTimeStamp = prevSeries[prevSeries.length - 1]?.timeStamp;
+        const currentPointTs = points[pointIndex].data[0]?.timeStamp;
+        const currentPointHeap = points[pointIndex].data[0]?.memory?.heap;
+
+        if ((prevTimeStamp + (REFRESH_RATE / 2)) > currentPointTs) {
+          return ({ ...acc, timeStamp: prevTimeStamp, [point.instanceId]: currentPointHeap });
+        }
 
         return ({
-          instanceId,
-          data: concatedSeries.slice(prevSeriesData.length >= pointsCount ? 1 : 0),
+          ...acc,
+          timeStamp: prevTimeStamp + REFRESH_RATE,
+          [point.instanceId]: currentPointHeap,
         });
-      });
+      }, {} as Point);
+      return [...prevSeries, newPoint].slice(prevSeries.length >= windowMs / REFRESH_RATE ? 1 : 0);
     }
 
     const unsubscribe = stateWatcherPluginSocket.subscribe(
@@ -81,16 +82,6 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     };
   }, [windowMs]);
 
-  const delay = data.isMonitoring ? REFRESH_RATE : null;
-  useInterval(
-    () => setData((prevState) =>
-      ({
-        ...prevState,
-        xTicks: [...prevState.xTicks, prevState.xTicks[prevState.xTicks.length - 1] + REFRESH_RATE].slice(1),
-      })),
-    delay,
-  );
-
   useEffect(() => {
     (async () => {
       try {
@@ -105,15 +96,32 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
 
         const responseData: StateWatcherData = response.data.data;
 
+        const pointsCount = Math.max(...responseData.series.map(({ data: points }) => points.length));
+        const xTicks = Array.from({ length: pointsCount }, (_, k) => Date.now() - windowMs + REFRESH_RATE * k);
         setData({
           ...responseData,
-          series: responseData.series.map(({ instanceId, data: seriesData }) =>
-            ({
-              instanceId,
-              data: sortBy([...seriesData, ...responseData.breaks.map(({ from, to }) =>
-                fillGaps(from < start ? start : from, to))].flat(), "timeStamp"),
-            })),
-          xTicks: Array.from({ length: pointsCount }, (_, k) => Date.now() - windowMs + REFRESH_RATE * k),
+          series: xTicks.map((timeStamp, timeStampIndex, timeStampArray) =>
+            responseData.series.map(({ instanceId, data: seriesData }) =>
+              ({
+                instanceId,
+                data: sortBy([...seriesData, ...responseData.breaks.map(({ from, to }) =>
+                  fillGaps(from < start ? start : from, to))].flat(), "timeStamp"),
+              })).reduce((acc, point, pointIndex, points) => {
+              const currentPointTs = points[pointIndex].data[timeStampIndex]?.timeStamp;
+              const currentPointHeap = points[pointIndex].data[timeStampIndex]?.memory?.heap;
+
+              if ((timeStamp + (REFRESH_RATE / 2)) > currentPointTs) {
+                return ({ ...acc, timeStamp, [point.instanceId]: currentPointHeap });
+              }
+
+              return ({
+                ...acc,
+                timeStamp: timeStampArray.length - 1 === timeStampIndex
+                  ? timeStamp + REFRESH_RATE
+                  : timeStamp,
+                [point.instanceId]: currentPointHeap,
+              });
+            }, {} as Point)),
         });
 
         setIsLoading(false);
@@ -122,7 +130,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
         setIsLoading(false);
       }
     })();
-  }, [windowMs, data.isMonitoring]);
+  }, [windowMs]);
 
   return {
     data,

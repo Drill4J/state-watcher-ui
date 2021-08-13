@@ -23,10 +23,12 @@ import tw, { styled } from "twin.macro";
 import { formatBytes, lessThanTen } from "utils";
 import { StateWatcherData } from "types";
 import { useInstanceIds } from "hooks";
+import { MemoryMetrics, StateWatcherLineChart } from "types/state-watcher";
+import { REFRESH_RATE } from "../constants";
 import { StateWatcherTooltip } from "./state-watcher-tooltip";
 
 interface Props {
-  data: StateWatcherData;
+  data: StateWatcherLineChart;
   instanceIds: string[];
   isActiveBuildVersion: boolean;
   height: number;
@@ -42,118 +44,113 @@ export const StateWatcher = ({
   const divisionsCount = 4;
   const yAxisStep = maxYAxisTick / divisionsCount;
 
+  console.log(data);
   return isActiveBuildVersion ? (
     <>
       <div tw="flex justify-between py-6">
         <span tw="text-12 leading-16 text-monochrome-default font-bold uppercase">Memory usage</span>
       </div>
       <div tw="flex gap-x-6 pl-4">
-        <ResponsiveContainer height={height}>
-          <LineChart height={height}>
-            <CartesianGrid strokeDasharray="line" strokeWidth={1} stroke="#E3E6E8" />
-            <XAxis
-              dataKey="timeStamp"
-              type="number"
-              scale="time"
-              strokeWidth="1"
-              stroke="#1B191B"
-              shapeRendering="crispEdges"
-              domain={["dataMin", "dataMax"]}
-              ticks={data.hasRecord || data.isMonitoring ? data.xTicks : undefined}
-              interval={defineInterval(data.xTicks.length)}
-              tick={({ x, y, payload }) => {
-                const date = new Date(payload.value);
+        <div tw="w-full h-full">
+          <ResponsiveContainer height={height} width="99%">
+            <LineChart data={data.series}>
+              <CartesianGrid strokeDasharray="line" strokeWidth={1} stroke="#E3E6E8" />
+              {(data.hasRecord || data.isMonitoring) && (
+                <XAxis
+                  dataKey="timeStamp"
+                  strokeWidth="1"
+                  stroke="#1B191B"
+                  shapeRendering="crispEdges"
+                  domain={["dataMin", "dataMax"]}
+                  tick={({ x, y, payload }) => {
+                    const date = new Date(payload.value);
 
-                const tick = `${lessThanTen(date.getHours())}:${lessThanTen(date.getMinutes())}:${lessThanTen(date.getSeconds())}`;
-                return (
-                  <Tick x={x} y={y} dy={16} dx={-25}>{tick}</Tick>
-                );
-              }}
-            />
-            <YAxis
-              domain={[0, maxYAxisTick]}
-              ticks={[0, yAxisStep, yAxisStep * 2, yAxisStep * 3, maxYAxisTick]}
-              dataKey="memory.heap"
-              tick={({ x, y, payload }) => (
-                <Tick
-                  isLast={payload.value === maxYAxisTick}
-                  x={x}
-                  y={y}
-                  dy={5}
-                  dx={-56}
-                >
-                  {formatBytes(payload.value)}
-                </Tick>
+                    const tick = `${lessThanTen(date.getHours())}:${lessThanTen(date.getMinutes())}:${lessThanTen(date.getSeconds())}`;
+                    return (
+                      <Tick x={x} y={y} dy={16} dx={-25}>{tick}</Tick>
+                    );
+                  }}
+                />
               )}
-              strokeWidth={0}
-            />
-            {!data.hasRecord && !data.isMonitoring && (
-              <ReferenceLine
-                y={yAxisStep * 2}
-                label={({ viewBox }) => (
-                  <text
-                    y="185"
-                    textAnchor="middle"
-                    fill="#A4ACB3"
+              <YAxis
+                domain={[0, maxYAxisTick]}
+                ticks={[0, yAxisStep, yAxisStep * 2, yAxisStep * 3, maxYAxisTick]}
+                tick={({ x, y, payload }) => (
+                  <Tick
+                    isLast={payload.value === maxYAxisTick}
+                    x={x}
+                    y={y}
+                    dy={5}
+                    dx={-56}
                   >
-                    <tspan fill="#A4ACB3" x={viewBox.width / 2}>Press &quot;Start Monitoring&quot; to begin</tspan>
-                  </text>
+                    {formatBytes(payload.value)}
+                  </Tick>
                 )}
-                stroke="#F7D77C"
                 strokeWidth={0}
               />
-            )}
-            {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />}
-            {/* below is a hack to match the design */}
-            {totalHeapLineIsVisible && (
-              <ReferenceLine
-                y={data.maxHeap - data.maxHeap / 128}
-                stroke="#F7D77C"
-                opacity="0.2"
-                strokeWidth={6}
-              />
-            )}
-            {data?.breaks.map(({ from, to }) => (
-              <ReferenceArea
-                key={`${from}-${to}`}
-                x1={from < data.xTicks[0] ? data.xTicks[0] : from}
-                x2={to}
-                fill="#E3E6E8"
-                label={PauseTooltip}
-                strokeOpacity={1}
-              />
-            ))}
-            <Tooltip
-              trigger="click"
-              cursor={data.series.some(({ data: seriesData }) =>
-                seriesData.some(({ timeStamp }) =>
-                  data.xTicks.slice(-data.xTicks).includes(timeStamp)))}
-              content={({ payload, label }) => (
-                <StateWatcherTooltip
-                  payload={payload}
-                  label={label}
-                  maxHeap={data?.maxHeap}
+              {/* {!data.hasRecord && !data.isMonitoring && (
+                <ReferenceLine
+                  y={yAxisStep * 2}
+                  label={({ viewBox }) => (
+                    <text
+                      y="185"
+                      textAnchor="middle"
+                      fill="#A4ACB3"
+                    >
+                      <tspan fill="#A4ACB3" x={viewBox.width / 2}>Press &quot;Start Monitoring&quot; to begin</tspan>
+                    </text>
+                  )}
+                  stroke="#F7D77C"
+                  strokeWidth={0}
                 />
-              )}
-            />
-            {data.series.map((instance) => (
-              observableInstances.find(({ instanceId }) => instance.instanceId === instanceId)?.isActive && (
+              )} */}
+              {/* {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />} */}
+              {/* below is a hack to match the design */}
+              {/* {totalHeapLineIsVisible && (
+                <ReferenceLine
+                  y={data.maxHeap - data.maxHeap / 128}
+                  stroke="#F7D77C"
+                  opacity="0.2"
+                  strokeWidth={6}
+                />
+              )} */}
+              {/* {data?.breaks.map(({ from, to }) => (
+                <ReferenceArea
+                  key={`${from}-${to}`}
+                  x1={from}
+                  x2={to}
+                  fill="#E3E6E8"
+                  label={PauseTooltip}
+                  strokeOpacity={1}
+                />
+              ))} */}
+              <Tooltip
+                // cursor={data.series.some(({ data: seriesData }) =>
+                //   seriesData.some(({ timeStamp }) =>
+                //     data.xTicks.slice(-data.xTicks).includes(timeStamp)))}
+                content={({ payload, label }) => (
+                  <StateWatcherTooltip
+                    payload={payload}
+                    label={label}
+                    maxHeap={data?.maxHeap}
+                  />
+                )}
+              />
+              {observableInstances.map(({ instanceId, color }) => (
                 <Line
-                  data={instance.data}
-                  key={instance.instanceId}
+                  key={instanceId}
                   type="linear"
-                  dataKey="memory.heap"
-                  stroke={observableInstances.find(({ instanceId }) => instance.instanceId === instanceId)?.color}
+                  dataKey={instanceId}
+                  stroke={color}
                   dot={false}
-                  activeDot={{ r: 5 }}
                   isAnimationActive={false}
                   strokeWidth={2}
-                  name={instance.instanceId}
+                  name={instanceId}
                 />
-              )
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
         <div tw="space-y-1 pt-1 w-52">
           <label tw="flex gap-x-2" style={{ color: "#F7D77C" }}>
             <Checkbox

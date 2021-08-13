@@ -29,6 +29,17 @@ export interface StateWatcherData {
   maxHeap: number;
   breaks: Breaks;
   series: Series;
-  xTicks: number[];
+  hasRecord: boolean;
+}
+
+export interface Point {
+  timeStamp: number;
+  [key: string]: number | null;
+}
+export interface StateWatcherLineChart {
+  isMonitoring: boolean;
+  maxHeap: number;
+  breaks: Breaks;
+  series: Point[];
   hasRecord: boolean;
 }
