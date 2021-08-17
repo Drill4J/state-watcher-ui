@@ -21,6 +21,9 @@ import { BrowserRouter, Route } from "react-router-dom";
 
 import { AgentPlugin as AgentPluginPage, GroupPlugin as GroupPluginPage } from "./pages";
 import { agentPluginPath, groupPluginPath } from "./common";
+import pkj from "../package.json";
+
+console.log("StateWatcher-UI version: ", pkj.version);
 
 axios.defaults.baseURL = process.env.REACT_APP_API_HOST
   ? `http://${process.env.REACT_APP_API_HOST}/api`
