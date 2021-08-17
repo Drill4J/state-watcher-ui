@@ -13,28 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { MemoryMetrics } from "types/state-watcher";
+import { Breaks, Point } from "types";
 import { REFRESH_RATE } from "../constants";
 
-export function fillGaps(from: number, to: number): MemoryMetrics[] {
-  const length = Math.round((to - from) / REFRESH_RATE);
-
-  if (length < 3) {
-    return [
-      { timeStamp: from, memory: { heap: null } },
-      { timeStamp: from + (to - from) / 2, memory: { heap: null } },
-      { timeStamp: to, memory: { heap: null } },
-    ];
-  }
-
+export const fillGaps = (breaks: Breaks): Point[] => breaks.map(({ from, to }) => {
+  const length = (to - from) / REFRESH_RATE;
   const createEmptyPoints = (_: any, k: number) => {
     const step = REFRESH_RATE * k;
 
-    if (k === 0) return { timeStamp: from, memory: { heap: null } };
-    if (k === length - 1) return { timeStamp: to, memory: { heap: null } };
+    if (k === 0) return { timeStamp: from, "1a6794f7-f4f6-4279-afe5-2a48c6489ae6": null };
+    if (k === length - 1) return { timeStamp: to, "1a6794f7-f4f6-4279-afe5-2a48c6489ae6": null };
 
-    return { timeStamp: from + step, memory: { heap: null } };
+    return { timeStamp: from + step, "1a6794f7-f4f6-4279-afe5-2a48c6489ae6": null };
   };
   return Array.from({ length }, createEmptyPoints);
-}
+}).flat();
+
+// if (length < 3) {
+//   return [
+//     { timeStamp: from, memory: { heap: null } },
+//     { timeStamp: from + (to - from) / 2, memory: { heap: null } },
+//     { timeStamp: to, memory: { heap: null } },
+//   ];
+// }

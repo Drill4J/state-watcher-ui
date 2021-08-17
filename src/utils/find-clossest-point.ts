@@ -13,6 +13,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export type {
-  InstancesInfo, Series, StateWatcherData, StateWatcherLineChart, Point, Breaks,
-} from "./state-watcher";
+import { Point } from "types";
+
+export const findClossestPoint = (points: Point[], timeStamp: number) =>
+  points
+    .find((point, index, arr) => point?.timeStamp <= timeStamp && arr[index + 1]?.timeStamp >= timeStamp);

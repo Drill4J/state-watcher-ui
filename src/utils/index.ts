@@ -17,3 +17,5 @@ export { formatBytes } from "./format-bytes";
 export { lessThanTen } from "./less-than-ten";
 export { sortBy } from "./sort-by";
 export { fillGaps } from "./fill-gaps";
+export { findClossestPoint } from "./find-clossest-point";
+export { roundedTimeStamp } from "./rounded-time-stamp";

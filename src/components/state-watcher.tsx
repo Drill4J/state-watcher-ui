@@ -20,7 +20,7 @@ import {
 } from "recharts";
 import tw, { styled } from "twin.macro";
 
-import { formatBytes, lessThanTen } from "utils";
+import { formatBytes, lessThanTen, roundedTimeStamp } from "utils";
 import { StateWatcherData } from "types";
 import { useInstanceIds } from "hooks";
 import { MemoryMetrics, StateWatcherLineChart } from "types/state-watcher";
@@ -60,7 +60,7 @@ export const StateWatcher = ({
                   strokeWidth="1"
                   stroke="#1B191B"
                   shapeRendering="crispEdges"
-                  domain={["dataMin", "dataMax"]}
+                  domain={["dataMin", roundedTimeStamp()]}
                   interval={defineInterval(data.series.length)}
                   tick={({ x, y, payload }) => {
                     const date = new Date(payload.value);
@@ -88,7 +88,7 @@ export const StateWatcher = ({
                 )}
                 strokeWidth={0}
               />
-              {/* {!data.hasRecord && !data.isMonitoring && (
+              {!data.hasRecord && !data.isMonitoring && (
                 <ReferenceLine
                   y={yAxisStep * 2}
                   label={({ viewBox }) => (
@@ -103,18 +103,18 @@ export const StateWatcher = ({
                   stroke="#F7D77C"
                   strokeWidth={0}
                 />
-              )} */}
-              {/* {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />} */}
+              )}
+              {totalHeapLineIsVisible && <ReferenceLine y={data.maxHeap} stroke="#F7D77C" strokeWidth={2} />}
               {/* below is a hack to match the design */}
-              {/* {totalHeapLineIsVisible && (
+              {totalHeapLineIsVisible && (
                 <ReferenceLine
                   y={data.maxHeap - data.maxHeap / 128}
                   stroke="#F7D77C"
                   opacity="0.2"
                   strokeWidth={6}
                 />
-              )} */}
-              {/* {data?.breaks.map(({ from, to }) => (
+              )}
+              {data?.breaks.map(({ from, to }) => (
                 <ReferenceArea
                   key={`${from}-${to}`}
                   x1={from}
@@ -123,11 +123,9 @@ export const StateWatcher = ({
                   label={PauseTooltip}
                   strokeOpacity={1}
                 />
-              ))} */}
+              ))}
               <Tooltip
-                // cursor={data.series.some(({ data: seriesData }) =>
-                //   seriesData.some(({ timeStamp }) =>
-                //     data.xTicks.slice(-data.xTicks).includes(timeStamp)))}
+                cursor={data.hasRecord}
                 content={({ payload, label }) => (
                   <StateWatcherTooltip
                     payload={payload}
@@ -136,17 +134,19 @@ export const StateWatcher = ({
                   />
                 )}
               />
-              {observableInstances.map(({ instanceId, color }) => (
-                <Line
-                  key={instanceId}
-                  type="linear"
-                  dataKey={instanceId}
-                  stroke={color}
-                  dot={false}
-                  isAnimationActive={false}
-                  strokeWidth={2}
-                  name={instanceId}
-                />
+              {observableInstances.map(({ instanceId, color, isActive }) => (
+                isActive && (
+                  <Line
+                    key={instanceId}
+                    type="linear"
+                    dataKey={instanceId}
+                    stroke={color}
+                    dot={false}
+                    isAnimationActive={false}
+                    strokeWidth={2}
+                    name={instanceId}
+                  />
+                )
               ))}
             </LineChart>
           </ResponsiveContainer>

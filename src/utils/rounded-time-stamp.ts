@@ -13,6 +13,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export type {
-  InstancesInfo, Series, StateWatcherData, StateWatcherLineChart, Point, Breaks,
-} from "./state-watcher";
+import { REFRESH_RATE } from "../constants";
+
+export function roundedTimeStamp() {
+  const now = Date.now();
+  const divisionRemainder = now % REFRESH_RATE;
+  const diff = REFRESH_RATE - divisionRemainder;
+  return diff < divisionRemainder ? now + diff : now - divisionRemainder;
+}
