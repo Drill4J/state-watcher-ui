@@ -59,7 +59,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
 
         return ({
           ...acc,
-          timeStamp: closest([prevTimeStamp, prevTimeStamp + REFRESH_RATE], currentPointTs),
+          timeStamp: closest([prevTimeStamp, prevTimeStamp + REFRESH_RATE, roundedTimeStamp()], currentPointTs),
           [instance.instanceId]: currentPointHeap,
         });
       }, {} as Point);
