@@ -65,6 +65,7 @@ export const AgentPlugin = () => {
           instanceIds={instanceIds}
           isActiveBuildVersion={isActiveBuildVersion}
           height={400}
+          windowMs={timeStamp}
         />
       </div>
     </>

@@ -21,10 +21,8 @@ import {
 import tw, { styled } from "twin.macro";
 
 import { formatBytes, lessThanTen, roundedTimeStamp } from "utils";
-import { StateWatcherData } from "types";
 import { useInstanceIds } from "hooks";
-import { MemoryMetrics, StateWatcherLineChart } from "types/state-watcher";
-import { REFRESH_RATE } from "../constants";
+import { StateWatcherLineChart } from "types/state-watcher";
 import { StateWatcherTooltip } from "./state-watcher-tooltip";
 
 interface Props {
@@ -32,10 +30,11 @@ interface Props {
   instanceIds: string[];
   isActiveBuildVersion: boolean;
   height: number;
+  windowMs: number;
 }
 
 export const StateWatcher = ({
-  data, instanceIds, isActiveBuildVersion, height,
+  data, instanceIds, isActiveBuildVersion, height, windowMs,
 }: Props) => {
   const [totalHeapLineIsVisible, setTotalHeapLineIsVisible] = useState(true);
   const { observableInstances, toggleInstanceActiveStatus } = useInstanceIds(instanceIds);
@@ -60,7 +59,7 @@ export const StateWatcher = ({
                   strokeWidth="1"
                   stroke="#1B191B"
                   shapeRendering="crispEdges"
-                  domain={["dataMin", roundedTimeStamp()]}
+                  domain={[roundedTimeStamp() - windowMs, roundedTimeStamp()]}
                   interval={defineInterval(data.series.length)}
                   tick={({ x, y, payload }) => {
                     const date = new Date(payload.value);
