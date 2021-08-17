@@ -36,6 +36,22 @@ export function useInstanceIds(instancesIds: string[]) {
 }
 
 function transformInstancesIds(instancesIds: string[]): InstancesInfo {
-  const colors = ["#F9AE7D", "#76A5E3", "#D599FF", "#EE7785", "#67D5B5"];
+  const colors = [
+    "#F0876F",
+    "#A3D381",
+    "#E677C3",
+    "#EE7785",
+    "#5FEDCE",
+    "#FF7FA8",
+    "#E79B5F",
+    "#6B7EED",
+    "#FF9291",
+    "#D6AF5C",
+    "#B878DC",
+    "#FFA983",
+    "#BFC267",
+    "#83E1A5",
+    "#EDD78E",
+  ];
   return instancesIds.map((instanceId, i) => ({ instanceId, isActive: true, color: colors[i] }));
 }
