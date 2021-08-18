@@ -51,7 +51,7 @@ export const StateWatcher = ({
       <div tw="flex gap-x-6 pl-4">
         <div tw="w-full h-full">
           <ResponsiveContainer height={height} width="99%">
-            <LineChart data={data.series}>
+            <LineChart data={data.points}>
               <CartesianGrid strokeDasharray="line" strokeWidth={1} stroke="#E3E6E8" />
               {(data.hasRecord || data.isMonitoring) && (
                 <XAxis
@@ -60,7 +60,7 @@ export const StateWatcher = ({
                   stroke="#1B191B"
                   shapeRendering="crispEdges"
                   domain={[roundedTimeStamp() - windowMs, roundedTimeStamp()]}
-                  interval={defineInterval(data.series.length)}
+                  interval={defineInterval(data.points.length)}
                   tick={({ x, y, payload }) => {
                     const date = new Date(payload.value);
 

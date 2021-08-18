@@ -40,6 +40,6 @@ export interface StateWatcherLineChart {
   isMonitoring: boolean;
   maxHeap: number;
   breaks: Breaks;
-  series: Point[];
+  points: Point[];
   hasRecord: boolean;
 }

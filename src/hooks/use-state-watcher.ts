@@ -16,16 +16,13 @@
 /* eslint-disable no-return-assign */
 import { useEffect, useState } from "react";
 import { sendNotificationEvent } from "@drill4j/send-notification-event";
-import { transformObjectsArrayToObject } from "@drill4j/common-utils";
 import axios from "axios";
 
 import { stateWatcherPluginSocket } from "common";
 import {
   Series, StateWatcherData, StateWatcherLineChart, Point,
 } from "types";
-import {
-  fillGaps, findClossestPoint, sortBy, roundedTimeStamp,
-} from "utils";
+import { roundedTimeStamp } from "utils";
 import { REFRESH_RATE } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
@@ -36,7 +33,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     isMonitoring: false,
     maxHeap: 0,
     breaks: [],
-    series: [],
+    points: [],
     hasRecord: false,
   });
 
@@ -46,14 +43,14 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
         setData((prevState) => ({
           ...prevState,
           ...newData,
-          series: addNewSeries(prevState.series, newData.series),
+          points: addNewSeries(prevState.points, newData.series),
         }));
       }
     }
 
-    function addNewSeries(prevSeries: Point[], newSeries: Series) {
+    function addNewSeries(prevPoints: Point[], newSeries: Series) {
       const newPoint = newSeries.reduce((acc, instance) => {
-        const prevTimeStamp = prevSeries[prevSeries.length - 1]?.timeStamp;
+        const prevTimeStamp = prevPoints[prevPoints.length - 1]?.timeStamp;
         const currentPointTs = instance.data[0]?.timeStamp;
         const currentPointHeap = instance.data[0]?.memory?.heap;
 
@@ -63,7 +60,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
           [instance.instanceId]: currentPointHeap,
         });
       }, {} as Point);
-      return [...prevSeries, newPoint].slice(prevSeries.length >= windowMs / REFRESH_RATE ? 1 : 0);
+      return [...prevPoints, newPoint].slice(prevPoints.length >= windowMs / REFRESH_RATE ? 1 : 0);
     }
 
     const unsubscribe = stateWatcherPluginSocket.subscribe(
@@ -101,11 +98,11 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
         const xTicks = Array
           .from({ length: windowMs / REFRESH_RATE }, (_, k) => start + REFRESH_RATE * k);
 
-        const seriesPoints = responseData.series.reduce((acc, instance, index) => {
-          const mappedTimeStamps = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
+        const points = responseData.series.reduce((acc, instance, index) => {
+          const mappedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
             ({ timeStamp: closest(xTicks, currentPointTs), [instance.instanceId]: memory.heap }));
 
-          return index === 0 ? [...acc, ...mappedTimeStamps] : acc.map((point, i) => ({ ...point, ...mappedTimeStamps[i] }));
+          return index === 0 ? [...acc, ...mappedPoints] : acc.map((point, i) => ({ ...point, ...mappedPoints[i] }));
         }, [] as Point[]);
 
         const pauseRanges =
@@ -117,7 +114,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
 
         setData({
           ...responseData,
-          series: seriesPoints,
+          points,
           breaks: pauseRanges,
         });
 
