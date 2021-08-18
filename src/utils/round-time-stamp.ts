@@ -13,9 +13,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { RESOLUTION } from "../constants";
+
 export function roundTimeStamp(timeStamp = Date.now()) {
-  const resolution = 5000;
-  const divisionRemainder = timeStamp % resolution;
-  const diff = resolution - divisionRemainder;
+  const divisionRemainder = timeStamp % RESOLUTION;
+  const diff = RESOLUTION - divisionRemainder;
   return diff < divisionRemainder ? timeStamp + diff : timeStamp - divisionRemainder;
 }

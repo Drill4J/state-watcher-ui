@@ -23,7 +23,7 @@ import {
   Series, StateWatcherData, StateWatcherLineChart, Point,
 } from "types";
 import { roundTimeStamp } from "utils";
-import { REFRESH_RATE } from "../constants";
+import { REFRESH_RATE, RESOLUTION } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
   const closest = (arr: number[], n:number) => arr.reduce((prev, curr) => (Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev));
@@ -96,7 +96,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
         const responseData: StateWatcherData = response.data.data;
 
         const xTicks = Array
-          .from({ length: windowMs / REFRESH_RATE }, (_, k) => start + REFRESH_RATE * k);
+          .from({ length: windowMs / RESOLUTION }, (_, k) => start + RESOLUTION * k);
 
         const points = responseData.series.reduce((acc, instance, index) => {
           const mappedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
