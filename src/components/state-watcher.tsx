@@ -20,7 +20,7 @@ import {
 } from "recharts";
 import tw, { styled } from "twin.macro";
 
-import { formatBytes, lessThanTen, roundedTimeStamp } from "utils";
+import { formatBytes, lessThanTen, roundTimeStamp } from "utils";
 import { useInstanceIds } from "hooks";
 import { StateWatcherLineChart } from "types/state-watcher";
 import { StateWatcherTooltip } from "./state-watcher-tooltip";
@@ -59,7 +59,7 @@ export const StateWatcher = ({
                   strokeWidth="1"
                   stroke="#1B191B"
                   shapeRendering="crispEdges"
-                  domain={[roundedTimeStamp() - windowMs, roundedTimeStamp()]}
+                  domain={[roundTimeStamp() - windowMs, roundTimeStamp()]}
                   interval={defineInterval(data.points.length)}
                   tick={({ x, y, payload }) => {
                     const date = new Date(payload.value);

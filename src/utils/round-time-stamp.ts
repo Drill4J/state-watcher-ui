@@ -13,11 +13,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { REFRESH_RATE } from "../constants";
-
-export function roundedTimeStamp() {
-  const now = Date.now();
-  const divisionRemainder = now % REFRESH_RATE;
-  const diff = REFRESH_RATE - divisionRemainder;
-  return diff < divisionRemainder ? now + diff : now - divisionRemainder;
+export function roundTimeStamp(timeStamp = Date.now()) {
+  const resolution = 5000;
+  const divisionRemainder = timeStamp % resolution;
+  const diff = resolution - divisionRemainder;
+  return diff < divisionRemainder ? timeStamp + diff : timeStamp - divisionRemainder;
 }

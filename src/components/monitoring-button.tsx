@@ -20,9 +20,6 @@ import axios from "axios";
 import "twin.macro";
 
 import { StateWatcherLineChart, StateWatcherData } from "types";
-import {
-  fillGaps, findClossestPoint, sortBy, roundedTimeStamp,
-} from "utils";
 
 interface Props {
   agentId: string;

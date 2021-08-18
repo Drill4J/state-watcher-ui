@@ -22,7 +22,7 @@ import { stateWatcherPluginSocket } from "common";
 import {
   Series, StateWatcherData, StateWatcherLineChart, Point,
 } from "types";
-import { roundedTimeStamp } from "utils";
+import { roundTimeStamp } from "utils";
 import { REFRESH_RATE } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
@@ -56,7 +56,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
 
         return ({
           ...acc,
-          timeStamp: closest([prevTimeStamp, prevTimeStamp + REFRESH_RATE, roundedTimeStamp()], currentPointTs),
+          timeStamp: closest([prevTimeStamp, prevTimeStamp + REFRESH_RATE, roundTimeStamp()], currentPointTs),
           [instance.instanceId]: currentPointHeap,
         });
       }, {} as Point);
@@ -79,7 +79,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
   }, [windowMs]);
 
   useEffect(() => {
-    const currentDate = roundedTimeStamp();
+    const currentDate = roundTimeStamp();
     const start = currentDate - windowMs;
 
     (async () => {
