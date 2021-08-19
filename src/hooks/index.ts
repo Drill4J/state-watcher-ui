@@ -18,4 +18,3 @@ export { useAdminConnection } from "./use-admin-connection";
 export { useAgent } from "./use-agent";
 export { useInstanceIds } from "./use-instance-ids";
 export { useStateWatcher } from "./use-state-watcher";
-export { useInterval } from "./use-interval";
