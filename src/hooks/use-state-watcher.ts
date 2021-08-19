@@ -47,7 +47,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     }
 
     function addNewSeries(prevPoints: Point[], newSeries: Series) {
-      const newPoints = getMappedPointsToXticksFromSeries(newSeries, windowMs, roundTimeStamp() - windowMs);
+      const newPoints = mapSeriesToXticks(newSeries, windowMs, roundTimeStamp() - windowMs);
 
       return [...prevPoints, ...newPoints].slice(prevPoints.length >= windowMs / REFRESH_RATE ? 1 : 0);
     }
@@ -94,7 +94,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
           ...responseData,
           points: sortBy(
             [
-              ...getMappedPointsToXticksFromSeries(responseData.series, windowMs, start),
+              ...mapSeriesToXticks(responseData.series, windowMs, start),
               ...fillGaps(pauseRanges),
             ], "timeStamp",
           ),
@@ -117,14 +117,16 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
   };
 }
 
-function getMappedPointsToXticksFromSeries(series: Series, windowMs: number, start: number) {
+function mapSeriesToXticks(series: Series, windowMs: number, start: number) {
   const xTicks = Array
     .from({ length: (windowMs / RESOLUTION) + 1 }, (_, k) => start + RESOLUTION * k);
 
-  return series.reduce((acc, instance, index) => {
+  const points = series.reduce((acc, instance, index) => {
     const mappedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
-      ({ timeStamp: xTicks.find((timeStamp) => timeStamp === roundTimeStamp(currentPointTs)), [instance.instanceId]: memory.heap }));
+      ({ timeStamp: roundTimeStamp(currentPointTs), [instance.instanceId]: memory.heap }));
 
     return index === 0 ? mappedPoints : acc.map((point, i) => ({ ...point, ...mappedPoints[i] }));
   }, [] as Point[]);
+
+  return xTicks.map((tick) => points.find(({ timeStamp }) => timeStamp === tick) || ({ timeStamp: tick }));
 }
