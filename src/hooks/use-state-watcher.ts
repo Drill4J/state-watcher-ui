@@ -125,6 +125,6 @@ function getMappedPointsToXticksFromSeries(series: Series, windowMs: number, sta
     const mappedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
       ({ timeStamp: xTicks.find((timeStamp) => timeStamp === roundTimeStamp(currentPointTs)), [instance.instanceId]: memory.heap }));
 
-    return index === 0 ? [...acc, ...mappedPoints] : acc.map((point, i) => ({ ...point, ...mappedPoints[i] }));
+    return index === 0 ? mappedPoints : acc.map((point, i) => ({ ...point, ...mappedPoints[i] }));
   }, [] as Point[]);
 }
