@@ -64,7 +64,7 @@ export const MonitoringButton = ({
                 ...prevState,
                 points: sortBy([...prevState.points, ...fillGaps(pauseRanges)], "timeStamp"),
                 isMonitoring: responseData.isMonitoring,
-                breaks: [...prevState.breaks, ...responseData.breaks],
+                breaks: [...prevState.breaks, ...pauseRanges],
               }));
           } else {
             setData((prevState) => (

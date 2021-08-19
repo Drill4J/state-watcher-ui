@@ -23,6 +23,7 @@ import tw, { styled } from "twin.macro";
 import { formatBytes, lessThanTen, roundTimeStamp } from "utils";
 import { useInstanceIds } from "hooks";
 import { StateWatcherLineChart } from "types/state-watcher";
+import { REFRESH_RATE } from "../constants";
 import { StateWatcherTooltip } from "./state-watcher-tooltip";
 
 interface Props {
@@ -42,7 +43,7 @@ export const StateWatcher = ({
   const maxYAxisTick = data.maxHeap + data.maxHeap * topMarginYAxis;
   const divisionsCount = 4;
   const yAxisStep = maxYAxisTick / divisionsCount;
-
+  const start = roundTimeStamp() - windowMs;
   return isActiveBuildVersion ? (
     <>
       <div tw="flex justify-between py-6">
@@ -59,7 +60,7 @@ export const StateWatcher = ({
                   strokeWidth="1"
                   stroke="#1B191B"
                   shapeRendering="crispEdges"
-                  domain={[roundTimeStamp() - windowMs, roundTimeStamp()]}
+                  domain={[start, roundTimeStamp()]}
                   interval={defineInterval(data.points.length)}
                   tick={({ x, y, payload }) => {
                     const date = new Date(payload.value);
@@ -116,7 +117,7 @@ export const StateWatcher = ({
               {data?.breaks.map(({ from, to }) => (
                 <ReferenceArea
                   key={`${from}-${to}`}
-                  x1={from}
+                  x1={from < start + REFRESH_RATE ? undefined : from}
                   x2={to}
                   fill="#E3E6E8"
                   label={PauseTooltip}
