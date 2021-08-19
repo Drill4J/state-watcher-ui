@@ -61,7 +61,6 @@ export const StateWatcher = ({
                   strokeWidth="1"
                   stroke="#1B191B"
                   shapeRendering="crispEdges"
-                  domain={["dataMin", "dataMax"]}
                   interval={defineInterval(data.points.length)}
                   tick={({ x, y, payload }) => {
                     const date = new Date(payload.value);
@@ -142,7 +141,7 @@ export const StateWatcher = ({
                     type="linear"
                     dataKey={instanceId}
                     stroke={color}
-                    // dot={false}
+                    dot={false}
                     isAnimationActive={false}
                     strokeWidth={2}
                     name={instanceId}

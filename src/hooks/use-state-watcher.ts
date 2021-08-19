@@ -23,9 +23,15 @@ import {
   Series, StateWatcherData, StateWatcherLineChart, Point,
 } from "types";
 import { fillGaps, roundTimeStamp, sortBy } from "utils";
-import { REFRESH_RATE, RESOLUTION } from "../constants";
+import { RESOLUTION } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
+  const start = roundTimeStamp() - windowMs;
+  const createXTicks = (
+    length = (windowMs / RESOLUTION),
+    ticksStart = start,
+  ) => Array.from({ length }, (_, k) => ticksStart + RESOLUTION * k);
+
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<StateWatcherLineChart>({
     isMonitoring: false,
@@ -47,9 +53,22 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     }
 
     function addNewSeries(prevPoints: Point[], newSeries: Series) {
-      const newPoints = mapSeriesToXticks(newSeries, windowMs, roundTimeStamp() - windowMs);
+      const getXTicks = () => {
+        if (prevPoints.length > 0) {
+          const newTicksCount = (roundTimeStamp() - (prevPoints[prevPoints.length - 1]?.timeStamp)) / RESOLUTION;
+          const newTicksStart = (prevPoints[prevPoints.length - 1].timeStamp) + RESOLUTION;
+          return createXTicks(newTicksCount, newTicksStart);
+        }
 
-      return [...prevPoints, ...newPoints].slice(prevPoints.length >= windowMs / REFRESH_RATE ? 1 : 0);
+        return createXTicks();
+      };
+
+      const newPoints = mapSeriesToXticks(
+        newSeries,
+        getXTicks(),
+      );
+
+      return [...prevPoints, ...newPoints].slice(-(windowMs / RESOLUTION));
     }
 
     const unsubscribe = stateWatcherPluginSocket.subscribe(
@@ -68,8 +87,6 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
   }, [windowMs]);
 
   useEffect(() => {
-    const currentDate = roundTimeStamp();
-    const start = currentDate - windowMs;
     (async () => {
       try {
         setIsLoading(true);
@@ -77,7 +94,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
           `/agents/${agentId}/plugins/stateWatcher/dispatch-action`,
           {
             type: "RECORD_DATA",
-            payload: { from: start, to: currentDate },
+            payload: { from: start, to: roundTimeStamp() },
           },
         );
 
@@ -94,7 +111,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
           ...responseData,
           points: sortBy(
             [
-              ...mapSeriesToXticks(responseData.series, windowMs, start),
+              ...mapSeriesToXticks(responseData.series, createXTicks()),
               ...fillGaps(pauseRanges),
             ], "timeStamp",
           ),
@@ -117,15 +134,12 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
   };
 }
 
-function mapSeriesToXticks(series: Series, windowMs: number, start: number) {
-  const xTicks = Array
-    .from({ length: (windowMs / RESOLUTION) + 1 }, (_, k) => start + RESOLUTION * k);
-
+function mapSeriesToXticks(series: Series, xTicks: number[]) {
   const points = series.reduce((acc, instance, index) => {
-    const mappedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
+    const roundedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
       ({ timeStamp: roundTimeStamp(currentPointTs), [instance.instanceId]: memory.heap }));
 
-    return index === 0 ? mappedPoints : acc.map((point, i) => ({ ...point, ...mappedPoints[i] }));
+    return index === 0 ? roundedPoints : acc.map((point, i) => ({ ...point, ...roundedPoints[i] }));
   }, [] as Point[]);
 
   return xTicks.map((tick) => points.find(({ timeStamp }) => timeStamp === tick) || ({ timeStamp: tick }));
