@@ -22,12 +22,10 @@ import { stateWatcherPluginSocket } from "common";
 import {
   Series, StateWatcherData, StateWatcherLineChart, Point,
 } from "types";
-import { roundTimeStamp } from "utils";
+import { fillGaps, roundTimeStamp, sortBy } from "utils";
 import { REFRESH_RATE, RESOLUTION } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
-  const closest = (arr: number[], n:number) => arr.reduce((prev, curr) => (Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev));
-
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<StateWatcherLineChart>({
     isMonitoring: false,
@@ -49,18 +47,9 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     }
 
     function addNewSeries(prevPoints: Point[], newSeries: Series) {
-      const newPoint = newSeries.reduce((acc, instance) => {
-        const prevTimeStamp = prevPoints[prevPoints.length - 1]?.timeStamp;
-        const currentPointTs = instance.data[0]?.timeStamp;
-        const currentPointHeap = instance.data[0]?.memory?.heap;
+      const newPoints = getMappedPointsToXticksFromSeries(newSeries, windowMs, roundTimeStamp() - windowMs);
 
-        return ({
-          ...acc,
-          timeStamp: closest([prevTimeStamp, prevTimeStamp + REFRESH_RATE, roundTimeStamp()], currentPointTs),
-          [instance.instanceId]: currentPointHeap,
-        });
-      }, {} as Point);
-      return [...prevPoints, newPoint].slice(prevPoints.length >= windowMs / REFRESH_RATE ? 1 : 0);
+      return [...prevPoints, ...newPoints].slice(prevPoints.length >= windowMs / REFRESH_RATE ? 1 : 0);
     }
 
     const unsubscribe = stateWatcherPluginSocket.subscribe(
@@ -81,7 +70,6 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
   useEffect(() => {
     const currentDate = roundTimeStamp();
     const start = currentDate - windowMs;
-
     (async () => {
       try {
         setIsLoading(true);
@@ -95,26 +83,21 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
 
         const responseData: StateWatcherData = response.data.data;
 
-        const xTicks = Array
-          .from({ length: windowMs / RESOLUTION }, (_, k) => start + RESOLUTION * k);
-
-        const points = responseData.series.reduce((acc, instance, index) => {
-          const mappedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
-            ({ timeStamp: closest(xTicks, currentPointTs), [instance.instanceId]: memory.heap }));
-
-          return index === 0 ? [...acc, ...mappedPoints] : acc.map((point, i) => ({ ...point, ...mappedPoints[i] }));
-        }, [] as Point[]);
-
         const pauseRanges =
           responseData.breaks.map(({ from, to }) =>
             ({
-              from: closest(xTicks, from),
-              to: closest(xTicks, to),
+              from: roundTimeStamp(from),
+              to: roundTimeStamp(to),
             })).flat();
 
         setData({
           ...responseData,
-          points,
+          points: sortBy(
+            [
+              ...getMappedPointsToXticksFromSeries(responseData.series, windowMs, start),
+              ...fillGaps(pauseRanges),
+            ], "timeStamp",
+          ),
           breaks: pauseRanges,
         });
 
@@ -132,4 +115,16 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     isLoading,
     setIsLoading,
   };
+}
+
+function getMappedPointsToXticksFromSeries(series: Series, windowMs: number, start: number) {
+  const xTicks = Array
+    .from({ length: (windowMs / RESOLUTION) + 1 }, (_, k) => start + RESOLUTION * k);
+
+  return series.reduce((acc, instance, index) => {
+    const mappedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
+      ({ timeStamp: xTicks.find((timeStamp) => timeStamp === roundTimeStamp(currentPointTs)), [instance.instanceId]: memory.heap }));
+
+    return index === 0 ? [...acc, ...mappedPoints] : acc.map((point, i) => ({ ...point, ...mappedPoints[i] }));
+  }, [] as Point[]);
 }

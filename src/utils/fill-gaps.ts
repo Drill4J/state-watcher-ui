@@ -14,25 +14,17 @@
  * limitations under the License.
  */
 import { Breaks, Point } from "types";
-import { REFRESH_RATE } from "../constants";
+import { RESOLUTION } from "../constants";
 
 export const fillGaps = (breaks: Breaks): Point[] => breaks.map(({ from, to }) => {
-  const length = (to - from) / REFRESH_RATE;
+  const length = (to - from) / RESOLUTION;
   const createEmptyPoints = (_: any, k: number) => {
-    const step = REFRESH_RATE * k;
+    const step = RESOLUTION * k;
 
-    if (k === 0) return { timeStamp: from, "1a6794f7-f4f6-4279-afe5-2a48c6489ae6": null };
-    if (k === length - 1) return { timeStamp: to, "1a6794f7-f4f6-4279-afe5-2a48c6489ae6": null };
+    if (k === 0) return { timeStamp: from };
+    if (k === length - 1) return { timeStamp: to };
 
-    return { timeStamp: from + step, "1a6794f7-f4f6-4279-afe5-2a48c6489ae6": null };
+    return { timeStamp: from + step };
   };
   return Array.from({ length }, createEmptyPoints);
 }).flat();
-
-// if (length < 3) {
-//   return [
-//     { timeStamp: from, memory: { heap: null } },
-//     { timeStamp: from + (to - from) / 2, memory: { heap: null } },
-//     { timeStamp: to, memory: { heap: null } },
-//   ];
-// }

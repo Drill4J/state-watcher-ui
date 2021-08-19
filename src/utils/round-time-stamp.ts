@@ -15,8 +15,8 @@
 */
 import { RESOLUTION } from "../constants";
 
-export function roundTimeStamp(timeStamp = Date.now()) {
-  const divisionRemainder = timeStamp % RESOLUTION;
-  const diff = RESOLUTION - divisionRemainder;
+export function roundTimeStamp(timeStamp = Date.now(), resolution = RESOLUTION) {
+  const divisionRemainder = timeStamp % resolution;
+  const diff = resolution - divisionRemainder;
   return diff < divisionRemainder ? timeStamp + diff : timeStamp - divisionRemainder;
 }

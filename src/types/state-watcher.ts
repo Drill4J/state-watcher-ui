@@ -33,8 +33,8 @@ export interface StateWatcherData {
 }
 
 export interface Point {
-  timeStamp: number;
-  [key: string]: number | null;
+  timeStamp?: number;
+  [key: string]: number | null | undefined;
 }
 export interface StateWatcherLineChart {
   isMonitoring: boolean;
