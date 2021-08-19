@@ -37,7 +37,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
 
   useEffect(() => {
     function handleDataChange(newData: StateWatcherData) {
-      if (newData.series.length > 0) {
+      if (Array.isArray(newData?.series) && newData.series.length > 0) {
         setData((prevState) => ({
           ...prevState,
           ...newData,
