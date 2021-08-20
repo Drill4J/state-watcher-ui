@@ -20,7 +20,7 @@ import axios from "axios";
 import "twin.macro";
 
 import { StateWatcherLineChart, StateWatcherData } from "types";
-import { fillGaps, roundTimeStamp, sortBy } from "utils";
+import { roundTimeStamp } from "utils";
 
 interface Props {
   agentId: string;
@@ -62,7 +62,6 @@ export const MonitoringButton = ({
             setData((prevState) => (
               {
                 ...prevState,
-                points: sortBy([...prevState.points, ...fillGaps(pauseRanges)], "timeStamp"),
                 isMonitoring: responseData.isMonitoring,
                 breaks: [...prevState.breaks, ...pauseRanges],
               }));

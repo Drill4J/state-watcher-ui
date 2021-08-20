@@ -22,7 +22,7 @@ import { stateWatcherPluginSocket } from "common";
 import {
   Series, StateWatcherData, StateWatcherLineChart, Point,
 } from "types";
-import { fillGaps, roundTimeStamp, sortBy } from "utils";
+import { roundTimeStamp } from "utils";
 import { RESOLUTION } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
@@ -46,8 +46,8 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
       if (Array.isArray(newData?.series) && newData.series.length > 0) {
         setData((prevState) => ({
           ...prevState,
-          ...newData,
           points: addNewSeries(prevState.points, newData.series),
+          maxHeap: newData.maxHeap,
         }));
       }
     }
@@ -108,14 +108,11 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
             })).flat();
 
         setData({
-          ...responseData,
-          points: sortBy(
-            [
-              ...mapSeriesToXticks(responseData.series, createXTicks()),
-              ...fillGaps(pauseRanges),
-            ], "timeStamp",
-          ),
+          points: mapSeriesToXticks(responseData.series, createXTicks()),
           breaks: pauseRanges,
+          isMonitoring: responseData.isMonitoring,
+          hasRecord: responseData.hasRecord,
+          maxHeap: responseData.maxHeap,
         });
 
         setIsLoading(false);

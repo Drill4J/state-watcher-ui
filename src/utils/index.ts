@@ -15,6 +15,4 @@
  */
 export { formatBytes } from "./format-bytes";
 export { lessThanTen } from "./less-than-ten";
-export { sortBy } from "./sort-by";
-export { fillGaps } from "./fill-gaps";
 export { roundTimeStamp } from "./round-time-stamp";
