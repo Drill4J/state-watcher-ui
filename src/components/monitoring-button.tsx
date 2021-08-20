@@ -19,13 +19,13 @@ import { sendNotificationEvent } from "@drill4j/send-notification-event";
 import axios from "axios";
 import "twin.macro";
 
-import { StateWatcherData } from "types";
-import { fillGaps, sortBy } from "utils";
+import { StateWatcherLineChart, StateWatcherData } from "types";
+import { roundTimeStamp } from "utils";
 
 interface Props {
   agentId: string;
-  data: StateWatcherData;
-  setData: Dispatch<SetStateAction<StateWatcherData>>;
+  data: StateWatcherLineChart;
+  setData: Dispatch<SetStateAction<StateWatcherLineChart>>;
   isLoading: boolean;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
   size: "large" | "small";
@@ -51,21 +51,19 @@ export const MonitoringButton = ({
           });
 
           const responseData: StateWatcherData = response?.data?.data?.payload;
+
           if (ACTION_TYPE === "START_RECORD") {
-            const { from, to } = responseData.breaks[0];
-            const currentStartTick = data.xTicks[0];
-            const fillGapFrom = from < currentStartTick ? currentStartTick : from;
-            const gaps = fillGaps(fillGapFrom, to);
+            const pauseRanges = responseData.breaks.map(({ from, to }) =>
+              ({
+                from: roundTimeStamp(from),
+                to: roundTimeStamp(to),
+              })).flat();
+
             setData((prevState) => (
               {
                 ...prevState,
                 isMonitoring: responseData.isMonitoring,
-                series: prevState.series.map(({ instanceId, data: seriesData }) =>
-                  ({
-                    instanceId,
-                    data: sortBy([...seriesData, ...gaps].flat(), "timeStamp"),
-                  })),
-                breaks: [responseData.breaks[responseData.breaks.length - 1]],
+                breaks: [...prevState.breaks, ...pauseRanges],
               }));
           } else {
             setData((prevState) => (

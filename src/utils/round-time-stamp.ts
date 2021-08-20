@@ -13,6 +13,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export type {
-  InstancesInfo, Series, StateWatcherData, StateWatcherLineChart, Point, Breaks,
-} from "./state-watcher";
+import { RESOLUTION } from "../constants";
+
+export function roundTimeStamp(timeStamp = Date.now(), resolution = RESOLUTION) {
+  const divisionRemainder = timeStamp % resolution;
+  const diff = resolution - divisionRemainder;
+  return diff <= divisionRemainder ? timeStamp + diff : timeStamp - divisionRemainder;
+}

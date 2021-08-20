@@ -15,3 +15,4 @@
  */
 
 export const REFRESH_RATE = 5000;
+export const RESOLUTION = 1000;

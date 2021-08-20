@@ -84,6 +84,7 @@ export const AgentStateWatcherLineChart = ({ id, buildVersion, instanceIds }: Pr
             instanceIds={instanceIds}
             isActiveBuildVersion={isActiveBuildVersion}
             height={180}
+            windowMs={timeStamp}
           />
         </div>
       )}

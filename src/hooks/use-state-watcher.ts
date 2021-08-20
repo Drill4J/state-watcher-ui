@@ -1,69 +1,74 @@
 /*
- * Copyright 2020 EPAM Systems
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright 2020 EPAM Systems
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+/* eslint-disable no-return-assign */
 import { useEffect, useState } from "react";
 import { sendNotificationEvent } from "@drill4j/send-notification-event";
 import axios from "axios";
 
 import { stateWatcherPluginSocket } from "common";
-import { Series, StateWatcherData } from "types/state-watcher";
-import { fillGaps, sortBy } from "utils";
-import { useInterval } from "./use-interval";
-import { REFRESH_RATE } from "../constants";
+import {
+  Series, StateWatcherData, StateWatcherLineChart, Point,
+} from "types";
+import { roundTimeStamp } from "utils";
+import { RESOLUTION } from "../constants";
 
 export function useStateWatcher(agentId: string, buildVersion: string, windowMs: number) {
-  const currentDate = Date.now();
-  const pointsCount = windowMs / REFRESH_RATE;
-  const start = currentDate - windowMs;
+  const start = roundTimeStamp() - windowMs;
+  const createXTicks = (
+    length = (windowMs / RESOLUTION),
+    ticksStart = start,
+  ) => Array.from({ length }, (_, k) => ticksStart + RESOLUTION * k);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<StateWatcherData>({
+  const [data, setData] = useState<StateWatcherLineChart>({
     isMonitoring: false,
     maxHeap: 0,
     breaks: [],
-    series: [],
-    xTicks: [],
+    points: [],
     hasRecord: false,
   });
 
   useEffect(() => {
     function handleDataChange(newData: StateWatcherData) {
-      if (newData) {
+      if (Array.isArray(newData?.series) && newData.series.length > 0) {
         setData((prevState) => ({
           ...prevState,
-          ...newData,
-          series: addNewSeries(prevState.series, newData.series),
+          points: addNewSeries(prevState.points, newData.series),
+          maxHeap: newData.maxHeap,
         }));
       }
     }
 
-    function addNewSeries(prevSeries: Series, newSeries: Series) {
-      if (prevSeries.length === 0) return newSeries;
-      return prevSeries.map(({ instanceId, data: prevSeriesData }) => {
-        const concatedSeries = [
-          ...prevSeriesData,
-          ...(newSeries.find(
-            ({ instanceId: newDataInstanceId }) => newDataInstanceId === instanceId,
-          )?.data || []),
-        ];
+    function addNewSeries(prevPoints: Point[], newSeries: Series) {
+      const getXTicks = () => {
+        if (prevPoints.length > 0) {
+          const newTicksCount = (roundTimeStamp() - (prevPoints[prevPoints.length - 1]?.timeStamp)) / RESOLUTION;
+          const newTicksStart = (prevPoints[prevPoints.length - 1].timeStamp) + RESOLUTION;
+          return createXTicks(newTicksCount, newTicksStart);
+        }
 
-        return ({
-          instanceId,
-          data: concatedSeries.slice(prevSeriesData.length >= pointsCount ? 1 : 0),
-        });
-      });
+        return createXTicks();
+      };
+
+      const newPoints = mapSeriesToXticks(
+        newSeries,
+        getXTicks(),
+      );
+
+      return [...prevPoints, ...newPoints].slice(-(windowMs / RESOLUTION));
     }
 
     const unsubscribe = stateWatcherPluginSocket.subscribe(
@@ -81,16 +86,6 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     };
   }, [windowMs]);
 
-  const delay = data.isMonitoring ? REFRESH_RATE : null;
-  useInterval(
-    () => setData((prevState) =>
-      ({
-        ...prevState,
-        xTicks: [...prevState.xTicks, prevState.xTicks[prevState.xTicks.length - 1] + REFRESH_RATE].slice(1),
-      })),
-    delay,
-  );
-
   useEffect(() => {
     (async () => {
       try {
@@ -99,21 +94,25 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
           `/agents/${agentId}/plugins/stateWatcher/dispatch-action`,
           {
             type: "RECORD_DATA",
-            payload: { from: start, to: currentDate },
+            payload: { from: start, to: roundTimeStamp() },
           },
         );
 
         const responseData: StateWatcherData = response.data.data;
 
-        setData({
-          ...responseData,
-          series: responseData.series.map(({ instanceId, data: seriesData }) =>
+        const pauseRanges =
+          responseData.breaks.map(({ from, to }) =>
             ({
-              instanceId,
-              data: sortBy([...seriesData, ...responseData.breaks.map(({ from, to }) =>
-                fillGaps(from < start ? start : from, to))].flat(), "timeStamp"),
-            })),
-          xTicks: Array.from({ length: pointsCount }, (_, k) => Date.now() - windowMs + REFRESH_RATE * k),
+              from: roundTimeStamp(from),
+              to: roundTimeStamp(to),
+            })).flat();
+
+        setData({
+          points: mapSeriesToXticks(responseData.series, createXTicks()),
+          breaks: pauseRanges,
+          isMonitoring: responseData.isMonitoring,
+          hasRecord: responseData.hasRecord,
+          maxHeap: responseData.maxHeap,
         });
 
         setIsLoading(false);
@@ -122,7 +121,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
         setIsLoading(false);
       }
     })();
-  }, [windowMs, data.isMonitoring]);
+  }, [windowMs]);
 
   return {
     data,
@@ -130,4 +129,15 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
     isLoading,
     setIsLoading,
   };
+}
+
+function mapSeriesToXticks(series: Series, xTicks: number[]) {
+  const points = series.reduce((acc, instance, index) => {
+    const roundedPoints = instance.data.map(({ timeStamp: currentPointTs, memory }) =>
+      ({ timeStamp: roundTimeStamp(currentPointTs), [instance.instanceId]: memory.heap }));
+
+    return index === 0 ? roundedPoints : acc.map((point, i) => ({ ...point, ...roundedPoints[i] }));
+  }, [] as Point[]);
+
+  return xTicks.map((tick) => points.find(({ timeStamp }) => timeStamp === tick) || ({ timeStamp: tick }));
 }
