@@ -117,7 +117,7 @@ export function useStateWatcher(agentId: string, buildVersion: string, windowMs:
 
         setIsLoading(false);
       } catch ({ response: { data: { message } = {} } = {} }) {
-        sendNotificationEvent({ type: "ERROR", text: message || "There is some issue with your action. Please try again." });
+        sendNotificationEvent({ type: "ERROR", text: message as string || "There is some issue with your action. Please try again." });
         setIsLoading(false);
       }
     })();

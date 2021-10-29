@@ -39,12 +39,12 @@ export const StateWatcher = ({
 }: Props) => {
   const [totalHeapLineIsVisible, setTotalHeapLineIsVisible] = useState(true);
   const { observableInstances, toggleInstanceActiveStatus } = useInstanceIds(instanceIds);
-  const topMarginYAxis = 0.15;
-  const maxYAxisTick = data.maxHeap + data.maxHeap * topMarginYAxis;
   const divisionsCount = 4;
-  const yAxisStep = maxYAxisTick / divisionsCount;
-  const start = roundTimeStamp() - windowMs;
+  const yAxisStep = data.maxHeap / divisionsCount;
+  const roundedYstep = yAxisStep + (1024 - (yAxisStep % 1024));
+  const maxYAxisTick = roundedYstep * divisionsCount * 1.1;
 
+  const start = roundTimeStamp() - windowMs;
   return isActiveBuildVersion ? (
     <>
       <div tw="flex justify-between py-6">
@@ -52,7 +52,7 @@ export const StateWatcher = ({
       </div>
       <div tw="flex gap-x-6 pl-4">
         <div tw="w-full h-full">
-          <ResponsiveContainer height={height} width="99%">
+          <ResponsiveContainer height={height} width="96%">
             <LineChart data={data.points}>
               <CartesianGrid strokeDasharray="line" strokeWidth={1} stroke="#E3E6E8" />
               {(data.hasRecord || data.isMonitoring) && (
@@ -74,7 +74,7 @@ export const StateWatcher = ({
               )}
               <YAxis
                 domain={[0, maxYAxisTick]}
-                ticks={[0, yAxisStep, yAxisStep * 2, yAxisStep * 3, maxYAxisTick]}
+                ticks={[0, roundedYstep, roundedYstep * 2, roundedYstep * 3, maxYAxisTick]}
                 tick={({ x, y, payload }) => (
                   <Tick
                     isLast={payload.value === maxYAxisTick}
@@ -158,7 +158,10 @@ export const StateWatcher = ({
               checked={totalHeapLineIsVisible}
               onChange={() => setTotalHeapLineIsVisible(!totalHeapLineIsVisible)}
             />
-            <Label>Total {formatBytes(data.maxHeap)}</Label>
+            <Label tw="w-full flex justify-between">
+              <span>Max Heap</span>
+              <span>{formatBytes(data.maxHeap)}</span>
+            </Label>
           </label>
           <span tw="text-10 leading-24 text-monochrome-default">Instances:</span>
           <ScrollContainer>
@@ -182,7 +185,8 @@ export const StateWatcher = ({
 };
 
 const ScrollContainer = styled.div`
-  ${tw`h-28 space-y-2 overflow-auto`};
+  height: calc(100% - 80px);
+  ${tw`space-y-2 overflow-auto`};
     &::-webkit-scrollbar {
       ${tw`w-1 rounded bg-monochrome-light-tint`}
     };

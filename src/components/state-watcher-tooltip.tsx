@@ -39,7 +39,7 @@ export const StateWatcherTooltip = ({ payload = [], label, maxHeap = 0 }: Props)
       <div tw="relative mx-2 text-12 leading-16">
         <div tw="space-y-3 bg-monochrome-black text-monochrome-white rounded p-4">
           <div tw="flex flex-col gap-y-1">
-            <Label name="Total memory" value={maxHeap} color="#F7D77C" />
+            <Label name="Max Heap" value={maxHeap} color="#F7D77C" />
             <span tw="text-10 leading-24 text-monochrome-medium-tint">Instances:</span>
             {payload.map(({ name, value, color }: any) => <Label key={name} name={name} value={value} color={color} />)}
           </div>
